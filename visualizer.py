@@ -1,8 +1,8 @@
 import pygame
 
 from board import Board
-from hud import HUD, Button
-from events import *
+from hud import HUD, Button, Text
+from events import FendoEvent, WallEvent, FieldEvent, ButtonEvent, OutOfBoundsEvent
 from colors import *
 
 BACKGROUND_COLOR = BROWN
@@ -82,48 +82,53 @@ class Visualizer:
             return True
         return False
     
-    def getField(self, pos):
+    def getEvent(self, pos) -> FendoEvent:
         if self.outOfBounds(pos):
-            return (None, False, '') # return button object instead of None
+            for item in self.hud.getItems():
+                if isinstance(item, Button):
+                    if pos[0] > item.left and pos[0] < item.left + item.width and pos[1] > item.top and pos[1] < item.top + item.height:
+                        return ButtonEvent(item)
+            else:
+                return OutOfBoundsEvent()
+        else:
+            fieldX = (int)(pos[0] - self.margin) // self.field_width
+            fieldY = (int)(pos[1] - self.margin) // self.field_width
             
-        boarderHit = False
-        boarderDirection = ''
-        
-        fieldX = (int)(pos[0] - self.margin) // self.field_width
-        fieldY = (int)(pos[1] - self.margin) // self.field_width
-        
-        topDist = (pos[1] - self.margin) - fieldY * self.field_width
-        leftDist = (pos[0] - self.margin) - fieldX * self.field_width
-        rightDist = self.field_width - leftDist
-        bottomDist = self.field_width - topDist
-        
-        if topDist < self.wall_width and leftDist > self.wall_width and rightDist > self.wall_width:
-            return FendoEvent(WALLHIT, {})
-            boarderHit = True
-            boarderDirection = 'N'
-        elif leftDist < self.wall_width and topDist > self.wall_width and bottomDist > self.wall_width:
-            boarderHit = True
-            boarderDirection = 'W'
-        elif rightDist < self.wall_width and topDist > self.wall_width and bottomDist > self.wall_width:
-            boarderHit = True
-            boarderDirection = 'E'
-        elif bottomDist < self.wall_width and leftDist > self.wall_width and rightDist > self.wall_width:
-            boarderHit = True
-            boarderDirection = 'S'      
-        
-        return (self.board.fields[fieldX, fieldY], boarderHit, boarderDirection)
+            topDist = (pos[1] - self.margin) - fieldY * self.field_width
+            leftDist = (pos[0] - self.margin) - fieldX * self.field_width
+            rightDist = self.field_width - leftDist
+            bottomDist = self.field_width - topDist
+            
+            if topDist < self.wall_width and leftDist > self.wall_width and rightDist > self.wall_width:
+                return WallEvent((fieldX, fieldY), 'N')
+            elif leftDist < self.wall_width and topDist > self.wall_width and bottomDist > self.wall_width:
+                return WallEvent((fieldX, fieldY), 'W')
+            elif rightDist < self.wall_width and topDist > self.wall_width and bottomDist > self.wall_width:
+                return WallEvent((fieldX, fieldY), 'E')
+            elif bottomDist < self.wall_width and leftDist > self.wall_width and rightDist > self.wall_width:
+                return WallEvent((fieldX, fieldY), 'S')
+            else:
+                return FieldEvent(self.board.fields[fieldX, fieldY]) 
+
+    def drawText(self, top, left, text, font_size, color):
+        font = pygame.font.Font(None, font_size)
+        text = font.render(text, True, color)
+        self.screen.blit(text, (left, top))
+
     
-    def drawButton(self, top, left, width, height, text, color):
-        pygame.draw.rect(self.screen, color, (top, left, width, height))
-        font = pygame.font.Font(None, 36)
+    def drawButton(self, top, left, width, height, text, font_size, color):
+        pygame.draw.rect(self.screen, color, (left, top, width, height))
+        font = pygame.font.Font(None, font_size)
         text = font.render(text, True, WHITE)
-        self.screen.blit(text, (top + width/4, left + height/4))
+        self.screen.blit(text, (left + width/4, top + height/4))
     
     
     def drawHUD(self):
         for item in self.hud.getItems():
             if isinstance(item, Button):
-                self.drawButton(item.top, item.left, item.width, item.height, item.text, item.color)
+                self.drawButton(item.top, item.left, item.width, item.height, item.text, item.font_size, item.color)
+            if isinstance(item, Text):
+                self.drawText(item.top, item.left, item.text, item.font_size, item.color)
         
     
     def update(self):

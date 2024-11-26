@@ -9,16 +9,41 @@ class HUD():
     
     def addButton(self, button):
         self.buttons.append(button)
+        
+    def addText(self, text):
+        self.texts.append(text)
+
+class Text():
+    
+    def __init__(self, top: float = None, left: float = None, text: str = None, font_size: float = None, color: tuple[int, int, int] = None):
+        self.top = top
+        self.left = left
+        self.text = text
+        self.font_size = font_size
+        self.color = color
+    
+    def setText(self, text):
+        self.text = text
+        
+    def setColor(self, color):
+        self.color = color
+        
+    def setTop(self, top):
+        self.top = top
+        
+    def setLeft(self, left):
+        self.left = left
 
 class Button():
     
     def __init__(self, top: float = None, left: float = None, width: float = None, height: float = None,
-                 text: str = None, color: tuple[int, int, int] = None, action: function = None):
+                 text: str = None, font_size: float = None, color: tuple[int, int, int] = None, action: callable = None):
         self.top = top
         self.left = left
         self.width = width
         self.height = height
         self.text = text
+        self.font_size = font_size
         self.color = color
         self.action = action
 
