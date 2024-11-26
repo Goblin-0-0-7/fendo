@@ -1,7 +1,7 @@
 import pygame
 
 from board import Board
-from hud import HUD, Button, Text
+from hud import HUD, Button, Text, Rectangle
 from events import FendoEvent, WallEvent, FieldEvent, ButtonEvent, OutOfBoundsEvent
 from colors import *
 
@@ -10,6 +10,7 @@ FIELD_COLOR = LIGHT_BROWN
 WALL_COLOR = BLACK
 PLAYER1_COLOR = ORANGE
 PLAYER2_COLOR = LIGHT_BLUE
+SELECTED_COLOR = WHITE
 
 class Visualizer:
     
@@ -64,17 +65,14 @@ class Visualizer:
                     pygame.draw.rect(self.screen, WALL_COLOR, (left + self.wall_width, top + self.field_width - self.wall_width, self.field_width - 2*self.wall_width, 2*self.wall_width))
     
     def drawPawns(self,):
-        for i in range(self.board.size):
-            for j in range(self.board.size):
-                field = self.board.fields[i, j]
-                
-                centerX = self.margin + field.coordinates[0] * self.field_width + self.field_width / 2
-                centerY = self.margin + field.coordinates[1] * self.field_width + self.field_width / 2
-                radius = (self.field_width / 2 - self.wall_width / 2) / 2
-                if field.pawn1:
-                    pygame.draw.circle(self.screen, PLAYER1_COLOR, (centerX,centerY), radius)
-                if field.pawn2:
-                    pygame.draw.circle(self.screen, PLAYER2_COLOR, (centerX, centerY), radius)
+        for pawn in self.board.pawns1 + self.board.pawns2:
+            centerX = self.margin + pawn.coordinates[0] * self.field_width + self.field_width / 2
+            centerY = self.margin + pawn.coordinates[1] * self.field_width + self.field_width / 2
+            radius = (self.field_width / 2 - self.wall_width / 2) / 2
+            color = PLAYER1_COLOR if pawn.player == 1 else PLAYER2_COLOR
+            if pawn.selected:
+                pygame.draw.circle(self.screen, SELECTED_COLOR, (centerX, centerY), radius + 5)
+            pygame.draw.circle(self.screen, color, (centerX, centerY), radius)
     
     
     def outOfBounds(self, pos) -> bool:
@@ -115,6 +113,9 @@ class Visualizer:
         text = font.render(text, True, color)
         self.screen.blit(text, (left, top))
 
+
+    def drawRectangle(self, top, left, width, height, color):
+        pygame.draw.rect(self.screen, color, (left, top, width, height))
     
     def drawButton(self, top, left, width, height, text, font_size, color):
         pygame.draw.rect(self.screen, color, (left, top, width, height))
@@ -129,6 +130,8 @@ class Visualizer:
                 self.drawButton(item.top, item.left, item.width, item.height, item.text, item.font_size, item.color)
             if isinstance(item, Text):
                 self.drawText(item.top, item.left, item.text, item.font_size, item.color)
+            if isinstance(item, Rectangle):
+                self.drawRectangle(item.top, item.left, item.width, item.height, item.color)
         
     
     def update(self):

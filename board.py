@@ -3,33 +3,107 @@ import numpy as np
 from moves import Move, PlaceWall, PlacePawn, MovePawn
 
 class Board():
-    def __init__(self, size: int):
-        self.size = size
-        self.fields = np.empty((size, size), dtype=Field)
-        self.moves_list: list[Move]= []
-        for i in range(size):
-            for j in range(size):
-                self.fields[i, j] = Field(size)
+    def __init__(self, board_size: int, max_pawns: int):
+        # board settings
+        self.size = board_size
+        self.max_pawns = max_pawns
+        # board objects
+        self.fields: np.ndarray[Field] = np.empty((board_size, board_size), dtype=Field)
+        for i in range(board_size):
+            for j in range(board_size):
+                self.fields[i, j] = Field(board_size)
                 self.fields[i, j].setCoordinates((i, j))
+        self.pawns1: list[Pawn] = []
+        self.pawns2: list[Pawn] = []
+        self.moves_list: list[Move]= []
+        # board states
+        self.selection: Pawn = None
                 
     def placeWall(self, coordinates: tuple[int, int], direction: str):
         self.fields[coordinates[0], coordinates[1]].placeWall(direction)
         self.moves_list.append(PlaceWall(coordinates, direction))
         
-    def placePawn(self, coordinates: tuple[int, int], pawn: int):
-        self.fields[coordinates[0], coordinates[1]].placePawn(pawn)
-        self.moves_list.append(PlacePawn(coordinates, pawn))
+    def placePawn(self, coordinates: tuple[int, int], player: int):
+        pawn = Pawn(player, coordinates)
+        if player == 1:
+            pawn_list = self.pawns1
+        elif player == 2:
+            pawn_list = self.pawns2
+        else:
+            raise ValueError('Invalid player number')
+        
+        if len(pawn_list) >= self.max_pawns:
+            print('Max number of pawns reached')
+            return
+        
+        if self.fields[coordinates[0], coordinates[1]].addPawn(pawn):
+            if player == 1:
+                self.pawns1.append(pawn)
+            elif player == 2:
+                self.pawns2.append(pawn)
+        self.moves_list.append(PlacePawn(coordinates, player))
     
-    def movePawn(self, start_coordinates: tuple[int, int], end_coordinates: tuple[int, int], pawn: int):
-        self.fields[start_coordinates[0], start_coordinates[1]].removePawn(pawn)
-        self.fields[end_coordinates[0], end_coordinates[1]].placePawn(pawn)
-        self.moves_list.append(MovePawn(start_coordinates, end_coordinates, pawn))
+    def movePawn(self, start_coordinates: tuple[int, int], end_coordinates: tuple[int, int], player: int, undo = False):
+        pawn_list = self.pawns1 if player == 1 else self.pawns2
+        for pawn in pawn_list:
+            if pawn.coordinates == start_coordinates:
+                if self.fields[end_coordinates[0], end_coordinates[1]].addPawn(pawn):
+                    pawn.setCoordinates(end_coordinates)
+                    self.fields[start_coordinates[0], start_coordinates[1]].removePawn()
+                    if not undo:
+                        self.moves_list.append(MovePawn(start_coordinates, end_coordinates, player))
     
     def removeWall(self, coordinates: tuple[int, int], direction: str):
         self.fields[coordinates[0], coordinates[1]].removeWall(direction)
         
-    def removePawn(self, coordinates: tuple[int, int], pawn: int):
-        self.fields[coordinates[0], coordinates[1]].removePawn(pawn)
+    def removePawn(self, coordinates: tuple[int, int]):
+        for pawn in self.pawns1:
+            if pawn.coordinates == coordinates:
+                self.pawns1.remove(pawn)
+        for pawn in self.pawns2:
+            if pawn.coordinates == coordinates:
+                self.pawns2.remove(pawn)
+        self.fields[coordinates[0], coordinates[1]].removePawn()
+    
+    
+    def selectPawn(self, coordinates: tuple[int, int], player: int):
+        ''' Works like toggle selection '''
+        pawn_list = self.pawns1 if player == 1 else self.pawns2
+        for pawn in pawn_list:
+            if pawn.coordinates == coordinates:
+                if self.selection:
+                    if self.selection == pawn:
+                        self.clearSelection()
+                    else:
+                        self.clearSelection()
+                        self.selection = pawn
+                        pawn.selected = True
+                else:
+                    self.selection = pawn
+                    pawn.selected = True                
+
+    
+    def getSelection(self):
+        return self.selection
+    
+    def clearSelection(self):
+        if self.selection:
+            self.selection.selected = False
+        self.selection = None
+    
+    def isOccupied(self, coordinates: tuple[int, int]):
+        if self.fields[coordinates[0], coordinates[1]].pawn:
+            return True
+        else:
+            return False
+    
+    def getPawns(self, player: int):
+        if player == 1:
+            return self.pawns1
+        elif player == 2:
+            return self.pawns2
+        else:
+            raise ValueError('Invalid player number')
     
     def undoMove(self):
         if len(self.moves_list) > 0:
@@ -37,11 +111,14 @@ class Board():
             if isinstance(move, PlaceWall):
                 self.removeWall(move.coordinates, move.direction)
             elif isinstance(move, PlacePawn):
-                self.removePawn(move.coordinates, move.pawn)
+                self.removePawn(move.coordinates)
             elif isinstance(move, MovePawn):
-                self.movePawn(move.end_coordinates, move.start_coordinates, move.pawn)
+                self.movePawn(move.end_coordinates, move.start_coordinates, move.pawn, undo = True)
     
     def cleanBoard(self):
+        self.pawns1 = []
+        self.pawns2 = []
+        self.clearSelection()
         for i in range(self.size):
             for j in range(self.size):
                 self.fields[i, j].cleanField()
@@ -55,8 +132,7 @@ class Field():
         self.wallE = False
         self.wallS = False
         self.wallW = False
-        self.pawn1 = False
-        self.pawn2 = False
+        self.pawn: Pawn = None
 
     
     def setCoordinates(self, coordinates: tuple[int, int]):
@@ -81,17 +157,13 @@ class Field():
             raise ValueError('Invalid direction')
 
     
-    def placePawn(self, pawn: int):
-        if pawn == 1 and self.pawn2 == False:
-            self.pawn1 = True
-        elif pawn == 2 and self.pawn1 == False:
-            self.pawn2 = True
-        elif pawn == 1 and self.pawn2 == True:
-            print('Player 2 already placed a pawn here')
-        elif pawn == 2 and self.pawn1 == True:
-            print('Player 1 already placed a pawn here')
+    def addPawn(self, pawn: int):
+        if self.pawn is None:
+            self.pawn = pawn
+            return True
         else:
-            raise ValueError('Invalid pawn number')
+            print('Field already has a pawn')
+            return False
         
     def removeWall(self, direction):
         if direction == 'N':
@@ -105,26 +177,23 @@ class Field():
         else:
             raise ValueError('Invalid direction')
         
-    def removePawn(self, pawn: int):
-        if pawn == 1:
-            self.pawn1 = False
-        elif pawn == 2:
-            self.pawn2 = False
-        else:
-            raise ValueError('Invalid pawn number')
+    def removePawn(self):
+        self.pawn = None
         
     def cleanField(self):
         self.removeWall('N')
         self.removeWall('E')
         self.removeWall('S')
         self.removeWall('W')
-        self.removePawn(1)
-        self.removePawn(2)
+        self.removePawn()
         
 class Pawn():
     def __init__(self, player: int, coordinates: tuple[int, int]):
+        if player != 1 and player != 2:
+            raise ValueError('Invalid player number')
         self.player = player
         self.coordinates = coordinates
+        self.selected = False
         
     def setCoordinates(self, coordinates: tuple[int, int]):
         self.coordinates = coordinates
