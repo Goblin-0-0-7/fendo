@@ -20,13 +20,18 @@ turn = 1
 
 
 # Initializing
-hud = HUD()
 board = Board(board_size, pawns)
+
+# Set up game
+board.placePawn((0, 3), 1)
+board.placePawn((6, 3), 2)
+
+hud = HUD()
 btn_undo = Button(margin/4, margin/4, 2*margin, margin/2, "Undo", 20, GRAY, board.undoMove)
 btn_clear = Button(margin/4, (9/4)*margin + 20, 2*margin, margin/2, "Clear", 20, BLACK, board.cleanBoard)
-txt_player1pawn_counter = Text(margin/3, 6*margin, f"Player 1 pawns: {pawns}", 22, ORANGE)
-txt_player2pawn_counter = Text(margin/3, 12*margin, f"Player 2 pawns: {pawns}", 22, LIGHT_BLUE)
-rect_turn_indentifier = Rectangle(margin/3, 10*margin, margin/2, margin/2, ORANGE)
+txt_player1pawn_counter = Text(margin/3, 6*margin, f"Player 1 pawns left: {pawns - len(board.getPawns(1))}", 22, ORANGE)
+txt_player2pawn_counter = Text(margin/3, 12*margin, f"Player 2 pawns left: {pawns - len(board.getPawns(2))}", 22, LIGHT_BLUE)
+rect_turn_indentifier = Rectangle(margin/3, 10.4*margin, margin/2, margin/2, ORANGE)
 
 hud.addButton(btn_undo)
 hud.addButton(btn_clear)
@@ -42,14 +47,15 @@ def update():
     visi.update()
 
 def updateTexts():
-    txt_player1pawn_counter.setText(f"Player 1 pawns: {pawns - len(board.getPawns(1))}")
-    txt_player2pawn_counter.setText(f"Player 2 pawns: {pawns - len(board.getPawns(2))}")
+    txt_player1pawn_counter.setText(f"Player 1 pawns left: {pawns - len(board.getPawns(1))}")
+    txt_player2pawn_counter.setText(f"Player 2 pawns left: {pawns - len(board.getPawns(2))}")
 
 def endTurn():
     global turn
     turn = 2 if turn == 1 else 1
     rect_turn_indentifier.setColor(ORANGE if turn == 1 else LIGHT_BLUE)
     visi.update()
+
 
 # Main Loop
 running = True
