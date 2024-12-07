@@ -230,6 +230,9 @@ class Field():
             case _:
                 raise ValueError('Invalid direction')
     
+    def getPawn(self):
+        return self.pawn
+    
     def cleanField(self):
         self.removeWall('N')
         self.removeWall('E')
