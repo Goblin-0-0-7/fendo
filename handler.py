@@ -13,8 +13,6 @@ board_width =  700
 screen_width = 900
 wall_width = 5
 margin = (screen_width - board_width) / 2
-global turn
-turn = 1
 
 
 # Usefull parameters
@@ -64,11 +62,9 @@ def updateTexts():
     txt_player2pawn_counter.setText(f"Player 2 pawns left: {pawns - len(board.getPawns(2))}")
 
 def endTurn():
-    global turn
-    turn = 2 if turn == 1 else 1
-    rect_turn_indentifier.setColor(ORANGE if turn == 1 else LIGHT_BLUE)
+    board.endTurn()
+    rect_turn_indentifier.setColor(ORANGE if board.getTurn() == 1 else LIGHT_BLUE)
     visi.update()
-
 
 # Main Loop
 running = True
@@ -88,13 +84,13 @@ while running:
                     field = fendo_event.field
                     if event.button == 1:  # Left click
                         if board.isOccupied(field.coordinates):
-                            board.selectPawn(field.coordinates, turn)
+                            board.selectPawn(field.coordinates)
                         else:
                             if board.getSelection():
-                                board.movePawn(board.getSelection().coordinates, field.coordinates, turn)
+                                board.movePawn(board.getSelection().coordinates, field.coordinates)
                                 board.clearSelection()
                             else:                        
-                                board.placePawn(field.coordinates, turn)
+                                board.placePawn(field.coordinates)
                                 updateTexts()
                     elif event.button == 3: # Right click
                         endTurn()

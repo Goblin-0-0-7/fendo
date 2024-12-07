@@ -17,20 +17,18 @@ class Board():
         self.pawns2: list[Pawn] = []
         self.moves_list: list[Move]= []
         # board states
+        self.turn = 1
         self.selection: Pawn = None
                 
     def placeWall(self, coordinates: tuple[int, int], direction: str):
         self.fields[coordinates[0], coordinates[1]].placeWall(direction)
         self.moves_list.append(PlaceWall(coordinates, direction))
         
-    def placePawn(self, coordinates: tuple[int, int], player: int):
+    def placePawn(self, coordinates: tuple[int, int], player: int = None):
+        if not player: player = self.turn
+        
         pawn = Pawn(player, coordinates)
-        if player == 1:
-            pawn_list = self.pawns1
-        elif player == 2:
-            pawn_list = self.pawns2
-        else:
-            raise ValueError('Invalid player number')
+        pawn_list = self.pawns1 if player == 1 else self.pawns2
         
         if len(pawn_list) >= self.max_pawns:
             print('Max number of pawns reached')
@@ -43,7 +41,8 @@ class Board():
                 self.pawns2.append(pawn)
         self.moves_list.append(PlacePawn(coordinates, player))
     
-    def movePawn(self, start_coordinates: tuple[int, int], end_coordinates: tuple[int, int], player: int, undo = False):
+    def movePawn(self, start_coordinates: tuple[int, int], end_coordinates: tuple[int, int], undo = False, player = None):
+        if not player: player = self.turn
         pawn_list = self.pawns1 if player == 1 else self.pawns2
         for pawn in pawn_list:
             if pawn.coordinates == start_coordinates:
@@ -66,8 +65,9 @@ class Board():
         self.fields[coordinates[0], coordinates[1]].removePawn()
     
     
-    def selectPawn(self, coordinates: tuple[int, int], player: int):
+    def selectPawn(self, coordinates: tuple[int, int], player = None):
         ''' Works like toggle selection '''
+        if not player: player = self.turn
         pawn_list = self.pawns1 if player == 1 else self.pawns2
         for pawn in pawn_list:
             if pawn.coordinates == coordinates:
@@ -114,6 +114,13 @@ class Board():
                 self.removePawn(move.coordinates)
             elif isinstance(move, MovePawn):
                 self.movePawn(move.end_coordinates, move.start_coordinates, move.pawn, undo = True)
+    
+    def getTurn(self):
+        return self.turn
+    
+    def endTurn(self):
+        self.turn = 2 if self.turn == 1 else 1
+        self.clearSelection()
     
     def cleanBoard(self):
         self.pawns1 = []
