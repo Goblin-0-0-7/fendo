@@ -21,7 +21,17 @@ class Board():
         self.selection: Pawn = None
                 
     def placeWall(self, coordinates: tuple[int, int], direction: str):
+        
         self.fields[coordinates[0], coordinates[1]].placeWall(direction)
+        if direction == 'N' and coordinates[1] != 0:
+            self.fields[coordinates[0], coordinates[1] - 1].placeWall('S')
+        elif direction == 'E' and coordinates[0] != self.size - 1:
+            self.fields[coordinates[0] + 1, coordinates[1]].placeWall('W')
+        elif direction == 'S' and coordinates[1] != self.size - 1:
+            self.fields[coordinates[0], coordinates[1] + 1].placeWall('N')
+        elif direction == 'W' and coordinates[0] != 0:
+            self.fields[coordinates[0] - 1, coordinates[1]].placeWall('E')
+        
         self.moves_list.append(PlaceWall(coordinates, direction))
         
     def placePawn(self, coordinates: tuple[int, int], player: int = None):
@@ -54,6 +64,14 @@ class Board():
     
     def removeWall(self, coordinates: tuple[int, int], direction: str):
         self.fields[coordinates[0], coordinates[1]].removeWall(direction)
+        if direction == 'N' and coordinates[1] != 0:
+            self.fields[coordinates[0], coordinates[1] - 1].removeWall('S')
+        elif direction == 'E' and coordinates[0] != self.size - 1:
+            self.fields[coordinates[0] + 1, coordinates[1]].removeWall('W')
+        elif direction == 'S' and coordinates[1] != self.size - 1:
+            self.fields[coordinates[0], coordinates[1] + 1].removeWall('N')
+        elif direction == 'W' and coordinates[0] != 0:
+            self.fields[coordinates[0] - 1, coordinates[1]].removeWall('E')
         
     def removePawn(self, coordinates: tuple[int, int]):
         for pawn in self.pawns1:
@@ -113,7 +131,7 @@ class Board():
             elif isinstance(move, PlacePawn):
                 self.removePawn(move.coordinates)
             elif isinstance(move, MovePawn):
-                self.movePawn(move.end_coordinates, move.start_coordinates, move.pawn, undo = True)
+                self.movePawn(move.end_coordinates, move.start_coordinates, move.pawn, undo = True, player = move.pawn)
 
     
     def getState(self):
