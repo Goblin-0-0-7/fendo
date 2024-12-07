@@ -1,6 +1,6 @@
 import numpy as np
 
-from moves import Move, PlaceWall, PlacePawn, MovePawn
+from moves import Move, GameStart, PlaceWall, PlacePawn, MovePawn
 
 class Board():
     def __init__(self, board_size: int, max_pawns: int):
@@ -15,10 +15,12 @@ class Board():
                 self.fields[i, j].setCoordinates((i, j))
         self.pawns1: list[Pawn] = []
         self.pawns2: list[Pawn] = []
-        self.moves_list: list[Move]= []
+        self.moves_list: list[Move]= [GameStart]
         # board states
         self.turn = 1
         self.selection: Pawn = None
+        
+        self.setStartConfiguration()
                 
     def placeWall(self, coordinates: tuple[int, int], direction: str):
         
@@ -132,6 +134,8 @@ class Board():
                 self.removePawn(move.coordinates)
             elif isinstance(move, MovePawn):
                 self.movePawn(move.end_coordinates, move.start_coordinates, move.player, undo = True)
+            elif isinstance(move, GameStart):
+                self.moves_list = [GameStart()]
 
     
     def getState(self):
@@ -152,6 +156,11 @@ class Board():
         self.turn = 2 if self.turn == 1 else 1
         self.clearSelection()
     
+    def setStartConfiguration(self):
+        self.placePawn((0, self.size // 2), 1)
+        self.placePawn((self.size - 1, self.size // 2), 2)
+        self.turn = 1
+    
     def cleanBoard(self):
         self.pawns1 = []
         self.pawns2 = []
@@ -159,6 +168,8 @@ class Board():
         for i in range(self.size):
             for j in range(self.size):
                 self.fields[i, j].cleanField()
+        self.moves_list = [GameStart()]
+        self.setStartConfiguration()
 
 
 class Field():  
@@ -250,3 +261,6 @@ class Pawn():
         
     def setCoordinates(self, coordinates: tuple[int, int]):
         self.coordinates = coordinates
+        
+    def getPosition(self):
+        return self.coordinates

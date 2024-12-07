@@ -27,10 +27,6 @@ axis_label_size = int(field_width / 4)
 board = Board(board_size, pawns)
 referee = Referee()
 
-# Set up game
-board.placePawn((0, 3), 1)
-board.placePawn((6, 3), 2)
-
 # HUD
 hud = HUD()
 btn_undo = Button(margin/4, margin/4, 0.8*field_width, field_width/3, "Undo", 20, GRAY, WHITE, board.undoMove)
@@ -59,6 +55,7 @@ visi = Visualizer(screen_width, board_width, margin, wall_width, board, hud)
 
 def update():
     updateTexts()
+    rect_turn_indentifier.setColor(ORANGE if board.getTurn() == 1 else LIGHT_BLUE)
     visi.update()
 
 def updateTexts():
@@ -67,8 +64,7 @@ def updateTexts():
 
 def endTurn():
     board.endTurn()
-    rect_turn_indentifier.setColor(ORANGE if board.getTurn() == 1 else LIGHT_BLUE)
-    visi.update()
+    update()
 
 # Main Loop
 running = True

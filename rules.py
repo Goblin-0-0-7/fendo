@@ -1,5 +1,5 @@
 from moves import Move, PlaceWall, PlacePawn, MovePawn
-from board import Field
+from board import Field, Pawn
 
 class Referee():
     
@@ -32,22 +32,27 @@ class Referee():
         if coordinates[1] == board_state['size'] - 1 and direction == 'S':
             return False
         # Check if wall placement is next to the previous pawn, moved by the same player
+        pawn_positions = []
         previous_move = board_state['moves_list'][-1]
         if isinstance(previous_move, MovePawn):
             if previous_move.player == board_state['turn']:
-                pawn_coordinates = previous_move.end_coordinates
-                if pawn_coordinates == coordinates:
-                        return True
-                if pawn_coordinates == (coordinates[0] - 1, coordinates[1]) and direction == 'W':
-                    return True
-                if pawn_coordinates == (coordinates[0] + 1, coordinates[1]) and direction == 'E':
-                    return True
-                if pawn_coordinates == (coordinates[0], coordinates[1] - 1) and direction == 'N':
-                    return True
-                if pawn_coordinates == (coordinates[0], coordinates[1] + 1) and direction == 'S':
-                    return True
+                pawn_positions.append(previous_move.end_coordinates)
         else:
-            return False
+            active_pawns = board_state['pawns1'] if board_state['turn'] == 1 else board_state['pawns2']
+            for pawn in active_pawns:
+                pawn_positions.append(pawn.getPosition())
+        for pawn_coordinates in pawn_positions:
+            if pawn_coordinates == coordinates:
+                    return True
+            if pawn_coordinates == (coordinates[0] - 1, coordinates[1]) and direction == 'W':
+                return True
+            if pawn_coordinates == (coordinates[0] + 1, coordinates[1]) and direction == 'E':
+                return True
+            if pawn_coordinates == (coordinates[0], coordinates[1] - 1) and direction == 'N':
+                return True
+            if pawn_coordinates == (coordinates[0], coordinates[1] + 1) and direction == 'S':
+                return True
+        return False
 
 
     def checkPawnMove(self, start_coordinates: tuple[int, int], end_coordinates: tuple[int, int], board_state: dict):
@@ -60,8 +65,12 @@ class Referee():
                 return False
         if isinstance(previous_move, MovePawn):
             return False
-        # Check path
-        return True
+        active_pawns: list[Pawn] = board_state['pawns1'] if player == 1 else board_state['pawns2']
+        
+        for pawn in active_pawns:
+            if self.findValidPath(pawn.getPosition(), coordinates, board_state['fields']):
+                return True
+        return False
     
     def findValidPath(self, start_coordinates: tuple[int, int], end_coordinates: tuple[int, int], fields: list[Field]):
         dist_x = end_coordinates[0] - start_coordinates[0]

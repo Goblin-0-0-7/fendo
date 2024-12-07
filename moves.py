@@ -3,6 +3,9 @@ class Move():
     def __init__(self):
         ...
         
+class GameStart(Move):
+    ...
+
 class PlaceWall(Move):
     
     def __init__(self, coordinates, direction):
