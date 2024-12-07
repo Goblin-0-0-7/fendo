@@ -51,7 +51,7 @@ class Board():
                 self.pawns2.append(pawn)
         self.moves_list.append(PlacePawn(coordinates, player))
     
-    def movePawn(self, start_coordinates: tuple[int, int], end_coordinates: tuple[int, int], undo = False, player = None):
+    def movePawn(self, start_coordinates: tuple[int, int], end_coordinates: tuple[int, int], player = None, undo = False):
         if not player: player = self.turn
         pawn_list = self.pawns1 if player == 1 else self.pawns2
         for pawn in pawn_list:
@@ -131,15 +131,17 @@ class Board():
             elif isinstance(move, PlacePawn):
                 self.removePawn(move.coordinates)
             elif isinstance(move, MovePawn):
-                self.movePawn(move.end_coordinates, move.start_coordinates, move.pawn, undo = True, player = move.pawn)
+                self.movePawn(move.end_coordinates, move.start_coordinates, move.player, undo = True)
 
     
     def getState(self):
         state = {
+            'size': self.size,
             'turn': self.turn,
             'pawns1': self.pawns1,
             'pawns2': self.pawns2,
-            'fields': self.fields
+            'fields': self.fields,
+            'moves_list': self.moves_list
         }
         return state
     
@@ -214,7 +216,20 @@ class Field():
         
     def removePawn(self):
         self.pawn = None
-        
+    
+    def getWall(self, direction):
+        match direction:
+            case 'N':
+                return self.wallN
+            case 'E':
+                return self.wallE
+            case 'S':
+                return self.wallS
+            case 'W':
+                return self.wallW
+            case _:
+                raise ValueError('Invalid direction')
+    
     def cleanField(self):
         self.removeWall('N')
         self.removeWall('E')

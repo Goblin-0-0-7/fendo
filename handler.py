@@ -3,6 +3,8 @@ import pygame
 from board import Board
 from hud import HUD, Button, Text, Rectangle, Axis
 from visualizer import Visualizer
+from rules import Referee
+from moves import Move, PlaceWall, PlacePawn, MovePawn
 from events import FendoEvent, WallEvent, FieldEvent, ButtonEvent, OutOfBoundsEvent
 from colors import *
 
@@ -23,6 +25,7 @@ axis_label_size = int(field_width / 4)
 
 # Initializing
 board = Board(board_size, pawns)
+referee = Referee()
 
 # Set up game
 board.placePawn((0, 3), 1)
@@ -78,36 +81,39 @@ while running:
             if event.key == pygame.K_SPACE:
                 endTurn()
         if event.type == pygame.MOUSEBUTTONDOWN:
-            pos = pygame.mouse.get_pos()
-            fendo_event = visi.getEvent(pos)
-            match fendo_event:
-                case FieldEvent():
-                    field = fendo_event.field
-                    if event.button == 1:  # Left click
+            if event.button == 3: # Right click
+                endTurn()
+            if event.button == 1:  # Left click
+                pos = pygame.mouse.get_pos()
+                fendo_event = visi.getEvent(pos)
+                match fendo_event:
+                    case FieldEvent():
+                        field = fendo_event.field
                         if board.isOccupied(field.coordinates):
                             board.selectPawn(field.coordinates)
                         else:
                             if board.getSelection():
-                                board.movePawn(board.getSelection().coordinates, field.coordinates)
-                                board.clearSelection()
-                            else:                        
-                                board.placePawn(field.coordinates)
-                                updateTexts()
-                    elif event.button == 3: # Right click
-                        endTurn()
-                case WallEvent():
-                    coords = fendo_event.coordinates
-                    direction = fendo_event.direction
-                    if event.button == 1:  # Left click
-                        board.placeWall(coords, direction)
-                        endTurn()
-                case ButtonEvent():
-                    action = fendo_event.button.getAction()
-                    if action is not None:
-                        action()
-                        update()
-                case OutOfBoundsEvent():
-                    pass
+                                if (referee.checkLegalMove(MovePawn(board.getSelection().coordinates, field.coordinates, board.getTurn()), board.getState())):
+                                    board.movePawn(board.getSelection().coordinates, field.coordinates)
+                                    board.clearSelection()
+                            else:
+                                if referee.checkLegalMove(PlacePawn(field.coordinates, board.getTurn()), board.getState()):                        
+                                    board.placePawn(field.coordinates)
+                                    updateTexts()
+                                    endTurn()
+                    case WallEvent():
+                        coords = fendo_event.coordinates
+                        direction = fendo_event.direction
+                        if referee.checkLegalMove(PlaceWall(coords, direction), board.getState()):
+                            board.placeWall(coords, direction)
+                            endTurn()
+                    case ButtonEvent():
+                        action = fendo_event.button.getAction()
+                        if action is not None:
+                            action()
+                            update()
+                    case OutOfBoundsEvent():
+                        pass
              
             visi.update()
    
