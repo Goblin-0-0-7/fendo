@@ -114,6 +114,16 @@ class Board():
                 self.removePawn(move.coordinates)
             elif isinstance(move, MovePawn):
                 self.movePawn(move.end_coordinates, move.start_coordinates, move.pawn, undo = True)
+
+    
+    def getState(self):
+        state = {
+            'turn': self.turn,
+            'pawns1': self.pawns1,
+            'pawns2': self.pawns2,
+            'fields': self.fields
+        }
+        return state
     
     def getTurn(self):
         return self.turn
