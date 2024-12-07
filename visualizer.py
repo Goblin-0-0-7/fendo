@@ -84,7 +84,7 @@ class Visualizer:
         if self.outOfBounds(pos):
             for item in self.hud.getItems():
                 if isinstance(item, Button):
-                    if pos[0] > item.left and pos[0] < item.left + item.width and pos[1] > item.top and pos[1] < item.top + item.height:
+                    if pos[0] > item.getButtonLeft() and pos[0] < item.getButtonLeft() + item.getButtonWidth() and pos[1] > item.getButtonTop() and pos[1] < item.getButtonTop() + item.getButtonHeight():
                         return ButtonEvent(item)
             else:
                 return OutOfBoundsEvent()
