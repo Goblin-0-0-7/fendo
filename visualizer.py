@@ -107,34 +107,9 @@ class Visualizer:
                 return WallEvent((fieldX, fieldY), 'S')
             else:
                 return FieldEvent(self.board.fields[fieldX, fieldY]) 
-
-    def drawText(self, top, left, text, font_size, color):
-        font = pygame.font.Font(None, font_size)
-        text = font.render(text, True, color)
-        self.screen.blit(text, (left, top))
-
-
-    def drawRectangle(self, top, left, width, height, color):
-        pygame.draw.rect(self.screen, color, (left, top, width, height))
-    
-    def drawButton(self, top, left, width, height, text, font_size, color):
-        pygame.draw.rect(self.screen, color, (left, top, width, height))
-        font = pygame.font.Font(None, font_size)
-        text = font.render(text, True, WHITE)
-        self.screen.blit(text, (left + width/4, top + height/4))
-    
-    
-    def drawHUD(self):
-        for item in self.hud.getItems():
-            if isinstance(item, Button):
-                self.drawButton(item.top, item.left, item.width, item.height, item.text, item.font_size, item.color)
-            if isinstance(item, Text):
-                self.drawText(item.top, item.left, item.text, item.font_size, item.color)
-            if isinstance(item, Rectangle):
-                self.drawRectangle(item.top, item.left, item.width, item.height, item.color)
-        
+ 
     
     def update(self):
         self.drawBoard()
-        self.drawHUD()
+        self.hud.draw(self.screen)
         pygame.display.flip()
