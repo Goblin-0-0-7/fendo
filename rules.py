@@ -44,10 +44,13 @@ class Referee():
         if isinstance(previous_move, MovePawn):
             if previous_move.player == board_state['turn']:
                 pawn_positions.append(previous_move.end_coordinates)
-        else:
-            active_pawns = board_state['pawns1'] if board_state['turn'] == 1 else board_state['pawns2']
-            for pawn in active_pawns:
-                pawn_positions.append(pawn.getPosition())
+        else: # PlacePawn or PlaceWall
+            if previous_move.player == board_state['turn']:
+                return False
+            else:
+                active_pawns = board_state['pawns1'] if board_state['turn'] == 1 else board_state['pawns2']
+                for pawn in active_pawns:
+                    pawn_positions.append(pawn.getPosition())
         for pawn_coordinates in pawn_positions:
             if pawn_coordinates == coordinates:
                     return True

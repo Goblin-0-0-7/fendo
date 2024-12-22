@@ -130,8 +130,10 @@ class Board():
             move = self.moves_list.pop()
             if isinstance(move, PlaceWall):
                 self.removeWall(move.coordinates, move.direction)
+                self.turn = 2 if self.turn == 1 else 1
             elif isinstance(move, PlacePawn):
                 self.removePawn(move.coordinates)
+                self.turn = 2 if self.turn == 1 else 1
             elif isinstance(move, MovePawn):
                 self.movePawn(move.end_coordinates, move.start_coordinates, move.player, undo = True)
             elif isinstance(move, GameStart):

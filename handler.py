@@ -84,7 +84,8 @@ while running:
                 update()
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 3: # Right click
-                endTurn()
+                if not referee.isActive():
+                    endTurn()
             if event.button == 1:  # Left click
                 pos = pygame.mouse.get_pos()
                 fendo_event = visi.getEvent(pos)
