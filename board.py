@@ -1,6 +1,6 @@
 import numpy as np
 
-from moves import Move, PlaceWall, PlacePawn, MovePawn
+from moves import Move, GameStart, PlaceWall, PlacePawn, MovePawn
 
 class Board():
     def __init__(self, board_size: int, max_pawns: int):
@@ -15,13 +15,25 @@ class Board():
                 self.fields[i, j].setCoordinates((i, j))
         self.pawns1: list[Pawn] = []
         self.pawns2: list[Pawn] = []
-        self.moves_list: list[Move]= []
+        self.moves_list: list[Move]= [GameStart]
         # board states
         self.turn = 1
         self.selection: Pawn = None
+        
+        self.setStartConfiguration()
                 
     def placeWall(self, coordinates: tuple[int, int], direction: str):
+        
         self.fields[coordinates[0], coordinates[1]].placeWall(direction)
+        if direction == 'N' and coordinates[1] != 0:
+            self.fields[coordinates[0], coordinates[1] - 1].placeWall('S')
+        elif direction == 'E' and coordinates[0] != self.size - 1:
+            self.fields[coordinates[0] + 1, coordinates[1]].placeWall('W')
+        elif direction == 'S' and coordinates[1] != self.size - 1:
+            self.fields[coordinates[0], coordinates[1] + 1].placeWall('N')
+        elif direction == 'W' and coordinates[0] != 0:
+            self.fields[coordinates[0] - 1, coordinates[1]].placeWall('E')
+        
         self.moves_list.append(PlaceWall(coordinates, direction))
         
     def placePawn(self, coordinates: tuple[int, int], player: int = None):
@@ -41,7 +53,7 @@ class Board():
                 self.pawns2.append(pawn)
         self.moves_list.append(PlacePawn(coordinates, player))
     
-    def movePawn(self, start_coordinates: tuple[int, int], end_coordinates: tuple[int, int], undo = False, player = None):
+    def movePawn(self, start_coordinates: tuple[int, int], end_coordinates: tuple[int, int], player = None, undo = False):
         if not player: player = self.turn
         pawn_list = self.pawns1 if player == 1 else self.pawns2
         for pawn in pawn_list:
@@ -54,6 +66,14 @@ class Board():
     
     def removeWall(self, coordinates: tuple[int, int], direction: str):
         self.fields[coordinates[0], coordinates[1]].removeWall(direction)
+        if direction == 'N' and coordinates[1] != 0:
+            self.fields[coordinates[0], coordinates[1] - 1].removeWall('S')
+        elif direction == 'E' and coordinates[0] != self.size - 1:
+            self.fields[coordinates[0] + 1, coordinates[1]].removeWall('W')
+        elif direction == 'S' and coordinates[1] != self.size - 1:
+            self.fields[coordinates[0], coordinates[1] + 1].removeWall('N')
+        elif direction == 'W' and coordinates[0] != 0:
+            self.fields[coordinates[0] - 1, coordinates[1]].removeWall('E')
         
     def removePawn(self, coordinates: tuple[int, int]):
         for pawn in self.pawns1:
@@ -110,18 +130,24 @@ class Board():
             move = self.moves_list.pop()
             if isinstance(move, PlaceWall):
                 self.removeWall(move.coordinates, move.direction)
+                self.turn = 2 if self.turn == 1 else 1
             elif isinstance(move, PlacePawn):
                 self.removePawn(move.coordinates)
+                self.turn = 2 if self.turn == 1 else 1
             elif isinstance(move, MovePawn):
-                self.movePawn(move.end_coordinates, move.start_coordinates, move.pawn, undo = True)
+                self.movePawn(move.end_coordinates, move.start_coordinates, move.player, undo = True)
+            elif isinstance(move, GameStart):
+                self.moves_list = [GameStart()]
 
     
     def getState(self):
         state = {
+            'size': self.size,
             'turn': self.turn,
             'pawns1': self.pawns1,
             'pawns2': self.pawns2,
-            'fields': self.fields
+            'fields': self.fields,
+            'moves_list': self.moves_list
         }
         return state
     
@@ -132,6 +158,11 @@ class Board():
         self.turn = 2 if self.turn == 1 else 1
         self.clearSelection()
     
+    def setStartConfiguration(self):
+        self.placePawn((0, self.size // 2), 1)
+        self.placePawn((self.size - 1, self.size // 2), 2)
+        self.turn = 1
+    
     def cleanBoard(self):
         self.pawns1 = []
         self.pawns2 = []
@@ -139,6 +170,8 @@ class Board():
         for i in range(self.size):
             for j in range(self.size):
                 self.fields[i, j].cleanField()
+        self.moves_list = [GameStart()]
+        self.setStartConfiguration()
 
 
 class Field():  
@@ -196,7 +229,23 @@ class Field():
         
     def removePawn(self):
         self.pawn = None
-        
+    
+    def getWall(self, direction):
+        match direction:
+            case 'N':
+                return self.wallN
+            case 'E':
+                return self.wallE
+            case 'S':
+                return self.wallS
+            case 'W':
+                return self.wallW
+            case _:
+                raise ValueError('Invalid direction')
+    
+    def getPawn(self):
+        return self.pawn
+    
     def cleanField(self):
         self.removeWall('N')
         self.removeWall('E')
@@ -214,3 +263,6 @@ class Pawn():
         
     def setCoordinates(self, coordinates: tuple[int, int]):
         self.coordinates = coordinates
+        
+    def getPosition(self):
+        return self.coordinates

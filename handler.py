@@ -3,6 +3,8 @@ import pygame
 from board import Board
 from hud import HUD, Button, Text, Rectangle, Axis
 from visualizer import Visualizer
+from rules import Referee
+from moves import Move, PlaceWall, PlacePawn, MovePawn
 from events import FendoEvent, WallEvent, FieldEvent, ButtonEvent, OutOfBoundsEvent
 from colors import *
 
@@ -23,10 +25,7 @@ axis_label_size = int(field_width / 4)
 
 # Initializing
 board = Board(board_size, pawns)
-
-# Set up game
-board.placePawn((0, 3), 1)
-board.placePawn((6, 3), 2)
+referee = Referee()
 
 # HUD
 hud = HUD()
@@ -40,6 +39,7 @@ axis_y_right = Axis(margin + field_width/2, margin + board_width + field_width/6
 txt_player1pawn_counter = Text(margin/3, margin + board_width/3, f"Player 1 pawns left: {pawns - len(board.getPawns(1))}", 22, ORANGE)
 txt_player2pawn_counter = Text(margin/3, margin + 2*board_width/3, f"Player 2 pawns left: {pawns - len(board.getPawns(2))}", 22, LIGHT_BLUE)
 rect_turn_indentifier = Rectangle(margin/3, margin + 1.8*board_width/3, field_width/5, field_width/5, ORANGE)
+rect_rules_status = Rectangle(margin/3, (3/2)*margin + board_width, field_width/5, field_width/5, GREEN)
 # add items to HUD
 hud.addItem(btn_undo)
 hud.addItem(btn_clear)
@@ -50,12 +50,14 @@ hud.addItem(axis_y_right)
 hud.addItem(txt_player1pawn_counter)
 hud.addItem(txt_player2pawn_counter)
 hud.addItem(rect_turn_indentifier)
+hud.addItem(rect_rules_status)
 
 
 visi = Visualizer(screen_width, board_width, margin, wall_width, board, hud)
 
 def update():
     updateTexts()
+    rect_turn_indentifier.setColor(ORANGE if board.getTurn() == 1 else LIGHT_BLUE)
     visi.update()
 
 def updateTexts():
@@ -64,8 +66,7 @@ def updateTexts():
 
 def endTurn():
     board.endTurn()
-    rect_turn_indentifier.setColor(ORANGE if board.getTurn() == 1 else LIGHT_BLUE)
-    visi.update()
+    update()
 
 # Main Loop
 running = True
@@ -77,37 +78,45 @@ while running:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 endTurn()
+            if event.key == pygame.K_r:
+                referee.toggleActive()
+                rect_rules_status.setColor(GREEN if referee.isActive() else RED)
+                update()
         if event.type == pygame.MOUSEBUTTONDOWN:
-            pos = pygame.mouse.get_pos()
-            fendo_event = visi.getEvent(pos)
-            match fendo_event:
-                case FieldEvent():
-                    field = fendo_event.field
-                    if event.button == 1:  # Left click
+            if event.button == 3: # Right click
+                if not referee.isActive():
+                    endTurn()
+            if event.button == 1:  # Left click
+                pos = pygame.mouse.get_pos()
+                fendo_event = visi.getEvent(pos)
+                match fendo_event:
+                    case FieldEvent():
+                        field = fendo_event.field
                         if board.isOccupied(field.coordinates):
                             board.selectPawn(field.coordinates)
                         else:
                             if board.getSelection():
-                                board.movePawn(board.getSelection().coordinates, field.coordinates)
-                                board.clearSelection()
-                            else:                        
-                                board.placePawn(field.coordinates)
-                                updateTexts()
-                    elif event.button == 3: # Right click
-                        endTurn()
-                case WallEvent():
-                    coords = fendo_event.coordinates
-                    direction = fendo_event.direction
-                    if event.button == 1:  # Left click
-                        board.placeWall(coords, direction)
-                        endTurn()
-                case ButtonEvent():
-                    action = fendo_event.button.getAction()
-                    if action is not None:
-                        action()
-                        update()
-                case OutOfBoundsEvent():
-                    pass
+                                if (referee.checkLegalMove(MovePawn(board.getSelection().coordinates, field.coordinates, board.getTurn()), board.getState())):
+                                    board.movePawn(board.getSelection().coordinates, field.coordinates)
+                                    board.clearSelection()
+                            else:
+                                if referee.checkLegalMove(PlacePawn(field.coordinates, board.getTurn()), board.getState()):                        
+                                    board.placePawn(field.coordinates)
+                                    updateTexts()
+                                    endTurn()
+                    case WallEvent():
+                        coords = fendo_event.coordinates
+                        direction = fendo_event.direction
+                        if referee.checkLegalMove(PlaceWall(coords, direction), board.getState()):
+                            board.placeWall(coords, direction)
+                            endTurn()
+                    case ButtonEvent():
+                        action = fendo_event.button.getAction()
+                        if action is not None:
+                            action()
+                            update()
+                    case OutOfBoundsEvent():
+                        pass
              
             visi.update()
    
