@@ -4,10 +4,17 @@ from board import Field, Pawn
 class Referee():
     
     def __init__(self):
-        ...
+        self.active = True
         
+    def toggleActive(self):
+        self.active = not self.active
+        
+    def isActive(self):
+        return self.active
     
     def checkLegalMove(self, move: Move, board_state: dict) -> bool:
+        if not self.active:
+            return True
         match move:
             case PlaceWall():
                 return self.checkWallPlace(move.coordinates, move.direction, board_state)

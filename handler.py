@@ -39,6 +39,7 @@ axis_y_right = Axis(margin + field_width/2, margin + board_width + field_width/6
 txt_player1pawn_counter = Text(margin/3, margin + board_width/3, f"Player 1 pawns left: {pawns - len(board.getPawns(1))}", 22, ORANGE)
 txt_player2pawn_counter = Text(margin/3, margin + 2*board_width/3, f"Player 2 pawns left: {pawns - len(board.getPawns(2))}", 22, LIGHT_BLUE)
 rect_turn_indentifier = Rectangle(margin/3, margin + 1.8*board_width/3, field_width/5, field_width/5, ORANGE)
+rect_rules_status = Rectangle(margin/3, (3/2)*margin + board_width, field_width/5, field_width/5, GREEN)
 # add items to HUD
 hud.addItem(btn_undo)
 hud.addItem(btn_clear)
@@ -49,6 +50,7 @@ hud.addItem(axis_y_right)
 hud.addItem(txt_player1pawn_counter)
 hud.addItem(txt_player2pawn_counter)
 hud.addItem(rect_turn_indentifier)
+hud.addItem(rect_rules_status)
 
 
 visi = Visualizer(screen_width, board_width, margin, wall_width, board, hud)
@@ -76,6 +78,10 @@ while running:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 endTurn()
+            if event.key == pygame.K_r:
+                referee.toggleActive()
+                rect_rules_status.setColor(GREEN if referee.isActive() else RED)
+                update()
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 3: # Right click
                 endTurn()
