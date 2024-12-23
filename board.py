@@ -1,6 +1,7 @@
 import numpy as np
 
 from moves import Move, GameStart, PlaceWall, PlacePawn, MovePawn
+from path import Area, findAreas, findOwner
 
 class Board():
     def __init__(self, board_size: int, max_pawns: int):
@@ -13,6 +14,7 @@ class Board():
             for j in range(board_size):
                 self.fields[i, j] = Field(board_size)
                 self.fields[i, j].setCoordinates((i, j))
+        self.areas: list[Area] = []
         self.pawns1: list[Pawn] = []
         self.pawns2: list[Pawn] = []
         self.moves_list: list[Move]= [GameStart]
@@ -140,6 +142,15 @@ class Board():
                 self.moves_list = [GameStart()]
 
     
+    def evaluateFields(self):
+        ''' Updates the Areas, Fields and their corresponding owners '''
+        self.areas = findAreas(list(self.fields.flatten()), self.fields)
+        for area in self.areas:
+            owner = findOwner(area)
+            area.setOwner(owner)
+            for field in area.getFields():
+                field.setOwner(owner)
+    
     def getState(self):
         state = {
             'size': self.size,
@@ -183,6 +194,7 @@ class Field():
         self.wallS = False
         self.wallW = False
         self.pawn: Pawn = None
+        self.owner = 0
 
     
     def setCoordinates(self, coordinates: tuple[int, int]):
