@@ -11,10 +11,11 @@ from colors import *
 # Settings
 pawns = 8
 board_size = 7
-board_width =  700
-screen_width = 900
-wall_width = 5
-margin = (screen_width - board_width) / 2
+screen_width = 650
+margin = (1/9) * screen_width
+board_width = screen_width - 2*margin
+wall_width = (1/150) * board_width
+player_text_size: int = (int) ((1/35) * screen_width)
 
 
 # Usefull parameters
@@ -36,8 +37,8 @@ axis_x_bottom = Axis(margin + board_width + field_width/6, margin + field_width/
 axis_y_left = Axis(margin + field_width/2, margin - field_width/6, margin, board_width, axis_vertical_labels, BLACK, axis_label_size, "vertical")
 axis_y_right = Axis(margin + field_width/2, margin + board_width + field_width/6, margin, board_width, axis_vertical_labels, BLACK, axis_label_size, "vertical")
 
-txt_player1pawn_counter = Text(margin/3, margin + board_width/3, f"Player 1 pawns left: {pawns - len(board.getPawns(1))}", 22, ORANGE)
-txt_player2pawn_counter = Text(margin/3, margin + 2*board_width/3, f"Player 2 pawns left: {pawns - len(board.getPawns(2))}", 22, LIGHT_BLUE)
+txt_player1pawn_counter = Text(margin/3, margin + board_width/3, f"Player 1 pawns left: {pawns - len(board.getPawns(1))}", player_text_size, ORANGE)
+txt_player2pawn_counter = Text(margin/3, margin + 2*board_width/3, f"Player 2 pawns left: {pawns - len(board.getPawns(2))}", player_text_size, LIGHT_BLUE)
 rect_turn_indentifier = Rectangle(margin/3, margin + 1.8*board_width/3, field_width/5, field_width/5, ORANGE)
 rect_rules_status = Rectangle(margin/3, (3/2)*margin + board_width, field_width/5, field_width/5, GREEN)
 # add items to HUD
