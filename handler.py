@@ -108,7 +108,7 @@ while running:
                     case WallEvent():
                         coords = fendo_event.coordinates
                         direction = fendo_event.direction
-                        if referee.checkLegalMove(PlaceWall(coords, direction), board.getState()):
+                        if referee.checkLegalMove(PlaceWall(coords, direction, board.getTurn()), board.getState()):
                             board.placeWall(coords, direction)
                             endTurn()
                     case ButtonEvent():
