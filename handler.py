@@ -9,7 +9,7 @@ from events import FendoEvent, WallEvent, FieldEvent, ButtonEvent, OutOfBoundsEv
 from colors import *
 
 # Settings
-pawns = 8
+pawns = 7
 board_size = 7
 board_width =  700
 screen_width = 900
