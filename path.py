@@ -136,7 +136,7 @@ def getValidNeighbors(field: 'Field', openFields) -> list['Field']:
         if not checkPathBlocked(direction, field):
             neighbor = field.getNeighbor(direction)
             if neighbor in openFields:
-            neighbors.append(neighbor)
+                neighbors.append(neighbor)
     return neighbors
 
 def findOwner(area: 'Area') -> int:

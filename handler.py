@@ -58,7 +58,7 @@ visi = Visualizer(screen_width, board_width, margin, wall_width, board, hud)
 def update():
     updateTexts()
     rect_turn_indentifier.setColor(ORANGE if board.getTurn() == 1 else LIGHT_BLUE)
-    board.evaluateFields()
+    #board.evaluateFields()
     visi.update()
 
 def updateTexts():
