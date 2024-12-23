@@ -58,6 +58,7 @@ visi = Visualizer(screen_width, board_width, margin, wall_width, board, hud)
 def update():
     updateTexts()
     rect_turn_indentifier.setColor(ORANGE if board.getTurn() == 1 else LIGHT_BLUE)
+    #board.evaluateFields()
     visi.update()
 
 def updateTexts():
@@ -107,7 +108,7 @@ while running:
                     case WallEvent():
                         coords = fendo_event.coordinates
                         direction = fendo_event.direction
-                        if referee.checkLegalMove(PlaceWall(coords, direction), board.getState()):
+                        if referee.checkLegalMove(PlaceWall(coords, direction, board.getTurn()), board.getState()):
                             board.placeWall(coords, direction)
                             endTurn()
                     case ButtonEvent():

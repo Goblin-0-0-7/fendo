@@ -1,6 +1,7 @@
 import numpy as np
 
 from moves import Move, GameStart, PlaceWall, PlacePawn, MovePawn
+from path import Area, findAreas, findOwner
 
 class Board():
     def __init__(self, board_size: int, max_pawns: int):
@@ -13,6 +14,7 @@ class Board():
             for j in range(board_size):
                 self.fields[i, j] = Field(board_size)
                 self.fields[i, j].setCoordinates((i, j))
+        self.areas: list[Area] = []
         self.pawns1: list[Pawn] = []
         self.pawns2: list[Pawn] = []
         self.moves_list: list[Move]= [GameStart]
@@ -22,7 +24,7 @@ class Board():
         
         self.setStartConfiguration()
                 
-    def placeWall(self, coordinates: tuple[int, int], direction: str):
+    def placeWall(self, coordinates: tuple[int, int], direction: str, player: int = 0):
         
         self.fields[coordinates[0], coordinates[1]].placeWall(direction)
         if direction == 'N' and coordinates[1] != 0:
@@ -34,7 +36,8 @@ class Board():
         elif direction == 'W' and coordinates[0] != 0:
             self.fields[coordinates[0] - 1, coordinates[1]].placeWall('E')
         
-        self.moves_list.append(PlaceWall(coordinates, direction))
+        if not player: player = self.turn
+        self.moves_list.append(PlaceWall(coordinates, direction, player))
         
     def placePawn(self, coordinates: tuple[int, int], player: int = None):
         if not player: player = self.turn
@@ -140,6 +143,15 @@ class Board():
                 self.moves_list = [GameStart()]
 
     
+    def evaluateFields(self):
+        ''' Updates the Areas, Fields and their corresponding owners '''
+        self.areas = findAreas(list(self.fields.flatten()), self.fields)
+        for area in self.areas:
+            owner = findOwner(area)
+            area.setOwner(owner)
+            for field in area.getFields():
+                field.setOwner(owner)
+    
     def getState(self):
         state = {
             'size': self.size,
@@ -183,6 +195,7 @@ class Field():
         self.wallS = False
         self.wallW = False
         self.pawn: Pawn = None
+        self.owner = 0
 
     
     def setCoordinates(self, coordinates: tuple[int, int]):
@@ -191,6 +204,8 @@ class Field():
         else:
             raise ValueError('Coordinates out of bounds')
 
+    def getCoordinates(self):
+        return self.coordinates
 
     def placeWall(self, direction):
         if direction == 'N' and self.coordinates[1] != 0:
@@ -246,6 +261,51 @@ class Field():
     def getPawn(self):
         return self.pawn
     
+    def setOwner(self, owner: int):
+        if owner != 0 and owner != 1 and owner != 2:
+            raise ValueError('Invalid player number')
+        self.owner = owner
+    
+    def getOwner(self):
+        return self.owner
+    
+    def getNorth(self) -> 'Field':
+        if self.coordinates[1] != 0:
+            return self.coordinates[0], self.coordinates[1] - 1
+        else:
+            return None
+    
+    def getEast(self) -> 'Field':
+        if self.coordinates[0] != self.board_size - 1:
+            return self.coordinates[0] + 1, self.coordinates[1]
+        else:
+            return None
+    
+    def getSouth(self) -> 'Field':
+        if self.coordinates[1] != self.board_size - 1:
+            return self.coordinates[0], self.coordinates[1] + 1
+        else:
+            return None
+
+    def getWest(self) -> 'Field':
+        if self.coordinates[0] != 0:
+            return self.coordinates[0] - 1, self.coordinates[1]
+        else:
+            return None
+    
+    def getNeighbour(self, direction: str) -> 'Field':
+        match direction:
+            case 'N':
+                return self.getNorth()
+            case 'E':
+                return self.getEast()
+            case 'S':
+                return self.getSouth()
+            case 'W':
+                return self.getWest()
+            case _:
+                raise ValueError('Invalid direction')
+    
     def cleanField(self):
         self.removeWall('N')
         self.removeWall('E')
@@ -260,7 +320,10 @@ class Pawn():
         self.player = player
         self.coordinates = coordinates
         self.selected = False
-        
+    
+    def getPlayer(self):
+        return self.player
+    
     def setCoordinates(self, coordinates: tuple[int, int]):
         self.coordinates = coordinates
         

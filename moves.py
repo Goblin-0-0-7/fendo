@@ -8,9 +8,10 @@ class GameStart(Move):
 
 class PlaceWall(Move):
     
-    def __init__(self, coordinates, direction):
+    def __init__(self, coordinates, direction, player):
         self.coordinates = coordinates
         self.direction = direction
+        self.player = player
         
 class PlacePawn(Move):
     

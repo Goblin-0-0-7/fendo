@@ -10,6 +10,8 @@ FIELD_COLOR = LIGHT_BROWN
 WALL_COLOR = BLACK
 PLAYER1_COLOR = ORANGE
 PLAYER2_COLOR = LIGHT_BLUE
+FIELD_COLOR_1 = [(FIELD_COLOR[i] + PLAYER1_COLOR[i]) // 2 for i in range(3)]
+FIELD_COLOR_2 = [(FIELD_COLOR[i] + PLAYER2_COLOR[i]) // 2 for i in range(3)]
 SELECTED_COLOR = WHITE
 
 class Visualizer:
@@ -45,7 +47,15 @@ class Visualizer:
                 left = self.margin + field.coordinates[0] * self.field_width + self.wall_width
                 width = self.field_width - 2*self.wall_width
                 
-                pygame.draw.rect(self.screen, FIELD_COLOR, (top, left, width, width))
+                field_owner = field.getOwner()
+                match field_owner:
+                    case 1:
+                        color = FIELD_COLOR_1
+                    case 2:
+                        color = FIELD_COLOR_2
+                    case _:
+                        color = FIELD_COLOR
+                pygame.draw.rect(self.screen, color, (top, left, width, width))
         
 
     def drawWalls(self):
