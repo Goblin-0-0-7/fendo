@@ -79,9 +79,10 @@ class Visualizer:
             centerX = self.margin + pawn.coordinates[0] * self.field_width + self.field_width / 2
             centerY = self.margin + pawn.coordinates[1] * self.field_width + self.field_width / 2
             radius = (self.field_width / 2 - self.wall_width / 2) / 2
+            selection_radius = radius + self.wall_width
             color = PLAYER1_COLOR if pawn.player == 1 else PLAYER2_COLOR
             if pawn.selected:
-                pygame.draw.circle(self.screen, SELECTED_COLOR, (centerX, centerY), radius + 5)
+                pygame.draw.circle(self.screen, SELECTED_COLOR, (centerX, centerY), selection_radius)
             pygame.draw.circle(self.screen, color, (centerX, centerY), radius)
     
     

@@ -11,11 +11,12 @@ from colors import *
 # Settings
 pawns = 7
 board_size = 7
-screen_width = 650
+screen_width = 1000
 margin = (1/9) * screen_width
 board_width = screen_width - 2*margin
 wall_width = (1/150) * board_width
 player_text_size: int = (int) ((1/35) * screen_width)
+button_text_size = (int) ((1/40) * screen_width)
 
 
 # Usefull parameters
@@ -30,8 +31,8 @@ referee = Referee()
 
 # HUD
 hud = HUD()
-btn_undo = Button(margin/4, margin/4, 0.8*field_width, field_width/3, "Undo", 20, GRAY, WHITE, board.undoMove)
-btn_clear = Button(margin/4, margin/4 + field_width/3 + 40, 0.8*field_width, field_width/3, "Clear", 20, BLACK, WHITE, board.cleanBoard)
+btn_undo = Button(margin/4, margin/4, 0.8*field_width, field_width/3, "Undo", button_text_size, GRAY, WHITE, board.undoMove)
+btn_clear = Button(margin/4, margin/4 + field_width/3 + 40, 0.8*field_width, field_width/3, "Clear", button_text_size, BLACK, WHITE, board.cleanBoard)
 axis_x_top = Axis(margin - field_width/6, margin + field_width/2, board_width, margin, axis_horizontal_labels, BLACK, axis_label_size, "horizontal")
 axis_x_bottom = Axis(margin + board_width + field_width/6, margin + field_width/2, board_width, margin, axis_horizontal_labels, BLACK, axis_label_size, "horizontal")
 axis_y_left = Axis(margin + field_width/2, margin - field_width/6, margin, board_width, axis_vertical_labels, BLACK, axis_label_size, "vertical")
