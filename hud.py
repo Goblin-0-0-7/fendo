@@ -20,19 +20,21 @@ class HUD():
     
 class Text():
     
-    def __init__(self, top: float = None, left: float = None, text: str = None, font_size: int = 20,
-                 color: tuple[int, int, int] = None, on_update: callable = None):
+    def __init__(self, top: float = None, left: float = None, text: str = "", font_size: int = 20,
+                 color: tuple[int, int, int] = None, active = True, on_update: callable = None):
         self.top = top
         self.left = left
         self.text = text
         self.font_size = font_size
         self.color = color
         self.on_update = on_update
+        self.active = active
     
     def draw(self, screen: pygame.Surface):
-        font = pygame.font.Font(None, self.font_size)
-        text = font.render(self.text, True, self.color)
-        screen.blit(text, (self.left, self.top))
+        if self.active:
+            font = pygame.font.Font(None, self.font_size)
+            text = font.render(self.text, True, self.color)
+            screen.blit(text, (self.left, self.top))
     
     def setText(self, text):
         self.text = text
@@ -63,6 +65,9 @@ class Text():
     
     def getFontsize(self):
         return self.font_size
+    
+    def setActive(self, active):
+        self.active = active
         
 class Rectangle():
     
