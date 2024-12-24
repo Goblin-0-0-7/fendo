@@ -11,7 +11,7 @@ from colors import *
 # Settings
 pawns = 7
 board_size = 7
-screen_width = 1000
+screen_width = 900
 margin = (1/9) * screen_width
 board_width = screen_width - 2*margin
 wall_width = (1/150) * board_width
