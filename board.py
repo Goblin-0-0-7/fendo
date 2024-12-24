@@ -147,6 +147,7 @@ class Board():
                 self.movePawn(move.end_coordinates, move.start_coordinates, move.player, undo = True)
             elif isinstance(move, GameStart):
                 self.moves_list = [GameStart()]
+            self.clearSelection()
 
     
     def evaluateFields(self):
