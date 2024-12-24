@@ -43,8 +43,8 @@ class Visualizer:
             for j in range(self.board.size):
                 field = self.board.fields[i, j]
                 
-                top = self.margin + field.coordinates[1] * self.field_width + self.wall_width
                 left = self.margin + field.coordinates[0] * self.field_width + self.wall_width
+                top = self.margin + field.coordinates[1] * self.field_width + self.wall_width
                 width = self.field_width - 2*self.wall_width
                 
                 field_owner = field.getOwner()
@@ -55,7 +55,7 @@ class Visualizer:
                         color = FIELD_COLOR_2
                     case _:
                         color = FIELD_COLOR
-                pygame.draw.rect(self.screen, color, (top, left, width, width))
+                pygame.draw.rect(self.screen, color, (left, top, width, width))
         
 
     def drawWalls(self):

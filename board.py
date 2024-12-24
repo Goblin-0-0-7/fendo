@@ -128,6 +128,12 @@ class Board():
         else:
             raise ValueError('Invalid player number')
     
+    def getField(self, coordinates: tuple[int, int]):
+        return self.fields[coordinates[0], coordinates[1]]
+    
+    def getSize(self):
+        return self.size
+    
     def undoMove(self):
         if len(self.moves_list) > 0:
             move = self.moves_list.pop()
@@ -145,7 +151,7 @@ class Board():
     
     def evaluateFields(self):
         ''' Updates the Areas, Fields and their corresponding owners '''
-        self.areas = findAreas(list(self.fields.flatten()), self.fields)
+        self.areas = findAreas(list(self.fields.flatten()), self)
         for area in self.areas:
             owner = findOwner(area)
             area.setOwner(owner)
@@ -270,30 +276,35 @@ class Field():
         return self.owner
     
     def getNorth(self) -> 'Field':
+        ''' Returns the coordinates of the field above '''
         if self.coordinates[1] != 0:
             return self.coordinates[0], self.coordinates[1] - 1
         else:
             return None
     
     def getEast(self) -> 'Field':
+        ''' Returns the coordinates of the field to the right '''
         if self.coordinates[0] != self.board_size - 1:
             return self.coordinates[0] + 1, self.coordinates[1]
         else:
             return None
     
     def getSouth(self) -> 'Field':
+        ''' Returns the coordinates of the field below '''
         if self.coordinates[1] != self.board_size - 1:
             return self.coordinates[0], self.coordinates[1] + 1
         else:
             return None
 
     def getWest(self) -> 'Field':
+        ''' Returns the coordinates of the field to the left '''
         if self.coordinates[0] != 0:
             return self.coordinates[0] - 1, self.coordinates[1]
         else:
             return None
     
-    def getNeighbour(self, direction: str) -> 'Field':
+    def getNeighborCoords(self, direction: str) -> 'Field':
+        ''' Returns the coordinates of the field in the given direction '''
         match direction:
             case 'N':
                 return self.getNorth()

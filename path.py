@@ -97,45 +97,48 @@ class Area():
         self.fields.append(field)
 
 
-def findAreas(openFields, board_fields) -> list['Area']:
+def findAreas(undesignated_fields: list['Field'], board: 'Board') -> list['Area']:
     areas: list['Area'] = []
-    while openFields:
-        startField = openFields[0]
-        openFields, area = searchArea(startField, openFields, board_fields)
+    while undesignated_fields:
+        startField = undesignated_fields[0]
+        area = searchArea(startField, board)
         areas.append(area)
+        for field in area.getFields():
+            undesignated_fields.remove(field)
 
     return areas
 
 
-def searchArea(startField: 'Field', openFields: list['Field'], board_fields) -> tuple[list['Field'], 'Area']:
+def searchArea(startField: 'Field', board: 'Board') -> 'Area':
     area = Area()
     area.addField(startField)
-    openFields.remove(startField)
     
-    areaFields = []
-    neighbors = getValidNeighbors(startField)
-    areaFields.extend(neighbors)
-    while openFields and neighbors:
-        for neighbor in neighbors:
-            neighbors = getValidNeighbors(neighbor)
-        
+    valid_neighbors = getValidNeighbors(startField, board)   
+    #step = 0 # debug variable 
+    while valid_neighbors:
+        next_neighbors = []
+        for neighbor in valid_neighbors:
+            for next in getValidNeighbors(neighbor, board):
+                if next not in next_neighbors:
+                    next_neighbors.append(next)
+            area.addField(neighbor)
+        valid_neighbors = []
+        for next_neighbor in next_neighbors:
+            if next_neighbor not in area.getFields():
+                valid_neighbors.append(next_neighbor)
+        #step += 1 # debug
+        #printAreaFields(step, area, board) # debug function
     
-    for field in openFields:
-        if findPath(startField.getCoordinates(), field.getCoordinates(), board_fields):
-            area.addField(field)
-            openFields.remove(field)
-        else:
-            print("gapo")
-    
-    return openFields, area
-    
+    return area
 
-def getValidNeighbors(field: 'Field', openFields) -> list['Field']:
+
+def getValidNeighbors(field: 'Field', board: 'Board') -> list['Field']:
     neighbors = []
     for direction in ['N', 'E', 'S', 'W']:
         if not checkPathBlocked(direction, field):
-            neighbor = field.getNeighbor(direction)
-            if neighbor in openFields:
+            neighbor_coords = field.getNeighborCoords(direction)
+            if neighbor_coords:
+                neighbor = board.getField(neighbor_coords)
                 neighbors.append(neighbor)
     return neighbors
 
@@ -150,3 +153,22 @@ def findOwner(area: 'Area') -> int:
         return owners[0]
     else:
         return 0
+    
+
+# Debug functions
+
+def printAreaFields(step: int, area: 'Area', board: 'Board'):
+    size = board.getSize()
+    grid = []
+    for y in range(size):
+        row = []
+        for x in range(size):
+            if board.getField((x,y)) in area.getFields():
+                row.append('X')
+            else:
+                row.append('O')
+        row_str = ' '.join(row)
+        grid.append(row_str)
+    print('\n')
+    print("Step:" + str(step))
+    print('\n'.join(grid))
