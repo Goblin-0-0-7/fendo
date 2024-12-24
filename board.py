@@ -159,6 +159,13 @@ class Board():
             for field in area.getFields():
                 field.setOwner(owner)
     
+    def getPlayerArea(self, player: int) -> int:
+        points = 0
+        for area in self.areas:
+            if area.getOwner() == player:
+                points += len(area.getFields())
+        return points
+    
     def getState(self):
         state = {
             'size': self.size,

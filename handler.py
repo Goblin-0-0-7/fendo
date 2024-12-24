@@ -40,6 +40,8 @@ axis_y_right = Axis(margin + field_width/2, margin + board_width + field_width/6
 
 txt_player1pawn_counter = Text(margin/3, margin + board_width/3, f"Player 1 pawns left: {pawns - len(board.getPawns(1))}", player_text_size, ORANGE)
 txt_player2pawn_counter = Text(margin/3, margin + 2*board_width/3, f"Player 2 pawns left: {pawns - len(board.getPawns(2))}", player_text_size, LIGHT_BLUE)
+txt_player1field_counter = Text((7/5)*margin + board_width, margin + board_width/4, f"Player 1 fields: {board.getPlayerArea(player = 1)}", player_text_size, ORANGE)
+txt_player2field_counter = Text((7/5)*margin + board_width, margin + board_width/2, f"Player 2 fields: {board.getPlayerArea(player = 2)}", player_text_size, LIGHT_BLUE)
 rect_turn_indentifier = Rectangle(margin/3, margin + 1.8*board_width/3, field_width/5, field_width/5, ORANGE)
 rect_rules_status = Rectangle(margin/3, (3/2)*margin + board_width, field_width/5, field_width/5, GREEN)
 # add items to HUD
@@ -51,6 +53,8 @@ hud.addItem(axis_y_left)
 hud.addItem(axis_y_right)
 hud.addItem(txt_player1pawn_counter)
 hud.addItem(txt_player2pawn_counter)
+hud.addItem(txt_player1field_counter)
+hud.addItem(txt_player2field_counter)
 hud.addItem(rect_turn_indentifier)
 hud.addItem(rect_rules_status)
 
@@ -58,14 +62,16 @@ hud.addItem(rect_rules_status)
 visi = Visualizer(screen_width, board_width, margin, wall_width, board, hud)
 
 def update():
+    board.evaluateFields()
     updateTexts()
     rect_turn_indentifier.setColor(ORANGE if board.getTurn() == 1 else LIGHT_BLUE)
-    board.evaluateFields()
     visi.update()
 
 def updateTexts():
     txt_player1pawn_counter.setText(f"Player 1 pawns left: {pawns - len(board.getPawns(1))}")
     txt_player2pawn_counter.setText(f"Player 2 pawns left: {pawns - len(board.getPawns(2))}")
+    txt_player1field_counter.setText(f"Player 1 fields: {board.getPlayerArea(player = 1)}")
+    txt_player2field_counter.setText(f"Player 2 fields: {board.getPlayerArea(player = 2)}")
 
 def endTurn():
     board.endTurn()
