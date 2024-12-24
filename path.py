@@ -90,7 +90,7 @@ class Area():
             raise ValueError('Invalid player number')
         self.owner = owner
         
-    def getFields(self):
+    def getFields(self) -> list['Field']:
         return self.fields
     
     def addField(self, field: 'Field'):

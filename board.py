@@ -93,7 +93,7 @@ class Board():
         if not player: player = self.turn
         pawn_list = self.pawns1 if player == 1 else self.pawns2
         for pawn in pawn_list:
-            if pawn.coordinates == coordinates:
+            if pawn.coordinates == coordinates and pawn.isActive():
                 if self.selection:
                     if self.selection == pawn:
                         self.clearSelection()
@@ -158,6 +158,10 @@ class Board():
             area.setOwner(owner)
             for field in area.getFields():
                 field.setOwner(owner)
+                if field.getPawn() and owner != 0:
+                    field.getPawn().setInactive()
+                elif field.getPawn():
+                    field.getPawn().setActive() # Important if undo opens area again
     
     def getPlayerArea(self, player: int) -> int:
         points = 0
@@ -339,6 +343,7 @@ class Pawn():
         self.player = player
         self.coordinates = coordinates
         self.selected = False
+        self.active = True
     
     def getPlayer(self):
         return self.player
@@ -348,3 +353,12 @@ class Pawn():
         
     def getPosition(self):
         return self.coordinates
+    
+    def setActive(self):
+        self.active = True
+    
+    def setInactive(self):
+        self.active = False
+    
+    def isActive(self):
+        return self.active
