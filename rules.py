@@ -67,6 +67,9 @@ class Referee():
 
 
     def checkPawnMove(self, start_coordinates: tuple[int, int], end_coordinates: tuple[int, int], board_state: dict):
+        previous_move = board_state['moves_list'][-1]
+        if previous_move.player == board_state['turn']:
+            return False
         return findValidPath(start_coordinates, end_coordinates, board_state['fields'])
     
     def checkPawnPlace(self, coordinates: tuple[int, int], player: int, board_state: dict):
