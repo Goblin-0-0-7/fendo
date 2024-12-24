@@ -4,7 +4,9 @@ class Move():
         ...
         
 class GameStart(Move):
-    ...
+    
+    def __str__(self):
+        return "GameStart"
 
 class PlaceWall(Move):
     
@@ -13,11 +15,17 @@ class PlaceWall(Move):
         self.direction = direction
         self.player = player
         
+    def __str__(self):
+        return f"PlaceWall: {self.coordinates}, {self.direction}, {self.player}"
+        
 class PlacePawn(Move):
     
     def __init__(self, coordinates, player):
         self.coordinates = coordinates
         self.player = player
+        
+    def __str__(self):
+        return f"PlacePawn: {self.coordinates}, {self.player}"
         
 class MovePawn(Move):
     
@@ -25,4 +33,7 @@ class MovePawn(Move):
         self.start_coordinates = start_coordinates
         self.end_coordinates = end_coordinates
         self.player = player
+        
+    def __str__(self):
+        return f"MovePawn: {self.start_coordinates}, {self.end_coordinates}, {self.player}"
     
