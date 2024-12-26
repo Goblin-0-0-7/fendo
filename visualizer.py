@@ -10,6 +10,8 @@ FIELD_COLOR = LIGHT_BROWN
 WALL_COLOR = BLACK
 PLAYER1_COLOR = ORANGE
 PLAYER2_COLOR = LIGHT_BLUE
+FIELD_COLOR_1 = [(FIELD_COLOR[i] + PLAYER1_COLOR[i]) // 2 for i in range(3)]
+FIELD_COLOR_2 = [(FIELD_COLOR[i] + PLAYER2_COLOR[i]) // 2 for i in range(3)]
 SELECTED_COLOR = WHITE
 
 class Visualizer:
@@ -41,11 +43,19 @@ class Visualizer:
             for j in range(self.board.size):
                 field = self.board.fields[i, j]
                 
-                top = self.margin + field.coordinates[1] * self.field_width + self.wall_width
                 left = self.margin + field.coordinates[0] * self.field_width + self.wall_width
+                top = self.margin + field.coordinates[1] * self.field_width + self.wall_width
                 width = self.field_width - 2*self.wall_width
                 
-                pygame.draw.rect(self.screen, FIELD_COLOR, (top, left, width, width))
+                field_owner = field.getOwner()
+                match field_owner:
+                    case 1:
+                        color = FIELD_COLOR_1
+                    case 2:
+                        color = FIELD_COLOR_2
+                    case _:
+                        color = FIELD_COLOR
+                pygame.draw.rect(self.screen, color, (left, top, width, width))
         
 
     def drawWalls(self):
@@ -69,9 +79,12 @@ class Visualizer:
             centerX = self.margin + pawn.coordinates[0] * self.field_width + self.field_width / 2
             centerY = self.margin + pawn.coordinates[1] * self.field_width + self.field_width / 2
             radius = (self.field_width / 2 - self.wall_width / 2) / 2
+            selection_radius = radius + self.wall_width
             color = PLAYER1_COLOR if pawn.player == 1 else PLAYER2_COLOR
+            if not pawn.isActive():
+                color = [color[i] // 2 for i in range(3)]
             if pawn.selected:
-                pygame.draw.circle(self.screen, SELECTED_COLOR, (centerX, centerY), radius + 5)
+                pygame.draw.circle(self.screen, SELECTED_COLOR, (centerX, centerY), selection_radius)
             pygame.draw.circle(self.screen, color, (centerX, centerY), radius)
     
     
