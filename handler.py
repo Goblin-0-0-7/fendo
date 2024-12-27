@@ -103,6 +103,9 @@ def updateTexts():
         txt_winner.setActive(True)
         if save_game:
             saveGame()
+    else:
+        txt_winner.setActive(False)
+        txt_winner.setText("")
 
 def checkWin() -> int:
     winner = 0
@@ -159,7 +162,6 @@ while running:
                             else:
                                 if referee.checkLegalMove(PlacePawn(field.coordinates, board.getTurn()), board.getState()):                        
                                     board.placePawn(field.coordinates)
-                                    updateTexts()
                                     endTurn()
                     case WallEvent():
                         coords = fendo_event.coordinates
