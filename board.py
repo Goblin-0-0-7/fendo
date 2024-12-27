@@ -343,7 +343,8 @@ class Board():
             'pawns1': self.pawns1,
             'pawns2': self.pawns2,
             'fields': self.fields,
-            'moves_list': self.moves_list
+            'moves_list': self.moves_list,
+            'areas': self.areas
         }
         return state
     
