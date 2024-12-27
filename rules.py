@@ -54,7 +54,7 @@ class Referee():
                     pawn_positions.append(pawn.getPosition())
         for pawn_coordinates in pawn_positions:
             if pawn_coordinates == coordinates:
-                    return True
+                return True
             if pawn_coordinates == (coordinates[0] - 1, coordinates[1]) and direction == 'W':
                 return True
             if pawn_coordinates == (coordinates[0] + 1, coordinates[1]) and direction == 'E':
@@ -75,14 +75,18 @@ class Referee():
         return findValidPath(start_coordinates, end_coordinates, board_state['fields'])
     
     def checkPawnPlace(self, coordinates: tuple[int, int], player: int, board_state: dict):
+        player_pawns: list[Pawn] = board_state['pawns1'] if player == 1 else board_state['pawns2']
+        active_pawns = [pawn for pawn in player_pawns if pawn.isActive()]
+        
+        if board_state['max_pawns'] - len(player_pawns) == 0:
+            return False
+        
         previous_move = board_state['moves_list'][-1]
         if isinstance(previous_move, PlacePawn):
             if previous_move.player == player:
                 return False
         if isinstance(previous_move, MovePawn):
             return False
-        player_pawns: list[Pawn] = board_state['pawns1'] if player == 1 else board_state['pawns2']
-        active_pawns = [pawn for pawn in player_pawns if pawn.isActive()]
         for pawn in active_pawns:
             if findValidPath(pawn.getPosition(), coordinates, board_state['fields']):
                 return True
