@@ -290,6 +290,9 @@ class Board():
         else:
             raise ValueError('Invalid player number')
     
+    def getFieldsFlat(self):
+        return list(self.fields.flatten())
+    
     def getField(self, coordinates: tuple[int, int]):
         return self.fields[coordinates[0], coordinates[1]]
     
@@ -335,6 +338,7 @@ class Board():
     def getState(self):
         state = {
             'size': self.size,
+            'max_pawns': self.max_pawns,
             'turn': self.turn,
             'pawns1': self.pawns1,
             'pawns2': self.pawns2,
@@ -342,6 +346,16 @@ class Board():
             'moves_list': self.moves_list
         }
         return state
+    
+    def loadState(self, state: dict):
+        self.size = state['size']
+        self.max_pawns = state['max_pawns']
+        self.turn = state['turn']
+        self.pawns1 = state['pawns1']
+        self.pawns2 = state['pawns2']
+        self.fields = state['fields']
+        self.moves_list = state['moves_list']
+        self.areas = state['areas']
     
     def getTurn(self):
         return self.turn
