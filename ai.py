@@ -1,4 +1,5 @@
 import random, copy
+from tqdm import tqdm
 
 from board import Board, Field, Pawn
 from moves import Move, PlacePawn, MovePawnAndWall, PlaceWall, MovePawn
@@ -6,7 +7,7 @@ from rules import Referee
 
 
 AREA_COEF = 1
-FREEMOV_COEF = 0.05
+FREEMOV_COEF = 0.01
 
 
 class Fendoter():
@@ -85,7 +86,7 @@ class Fendoter():
     def evaluateMoves(self, new_boards: list[Board], possible_moves: list[Move], method: str) -> Move:
         match method:
             case "depth1":
-                return self.depth1Eval(new_boards)
+                return self.depth1Eval(new_boards, possible_moves)
             case "random":
                 return self.randomGrading(possible_moves)
             case "minimax":
@@ -101,22 +102,26 @@ class Fendoter():
     def randomGrading(self, moves: list[Move]) -> int:
         return random.choice(moves)
 
-    def depth1Eval(self, boards: list[Board]):
+    def depth1Eval(self, boards: list[Board], moves: list[Move]) -> Move:
         best_move = boards[0]
         best_grade = self.depth1Grading(best_move)
-        for state in boards:
+        for state in tqdm(boards):
             grade = self.depth1Grading(state)
             if grade > best_grade:
                 best_move = state
                 best_grade = grade
-        return best_move
+        best_move_index = boards.index(best_move)
+        return moves[best_move_index]
     
     def depth1Grading(self, board: Board) -> int:
         grade = 0
         # grade area
         grade += AREA_COEF*(board.getPlayerArea(self.player) - board.getPlayerArea(self.opponent))
         # grade movement freedom
-        grade += FREEMOV_COEF*len(self.calculateMoves(board)[0])
+        mov_freedom = self.calculateMoves(board)[0] #TODO: move back into brackets
+        grade += FREEMOV_COEF*len(mov_freedom)
+        # grade pawn amount # just for debug, not good grading method
+        #grade += 10*len(board.getPawns(self.player))
         return grade
     
         
