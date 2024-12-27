@@ -1,3 +1,5 @@
+import copy
+
 from moves import Move, PlaceWall, PlacePawn, MovePawn, MovePawnAndWall
 from board import Field, Pawn
 from path import findValidPath
@@ -26,8 +28,9 @@ class Referee():
             case MovePawnAndWall():
                 if self.checkLegalMove(MovePawn(move.start_coordinates, move.end_coordinates, move.player), board_state):
                     # Manipulate board_state to use checkWallPlace
-                    board_state['move_list'].append(MovePawn(move.start_coordinates, move.end_coordinates, move.player))
-                    return self.checkLegalMove(PlaceWall(move.end_coordinates, move.direction, move.player), board_state)
+                    board_state_copy = copy.deepcopy(board_state)
+                    board_state_copy['moves_list'].append(MovePawn(move.start_coordinates, move.end_coordinates, move.player))
+                    return self.checkLegalMove(PlaceWall(move.end_coordinates, move.direction, move.player), board_state_copy)
                 return False
             case _:
                 raise ValueError('Invalid move')

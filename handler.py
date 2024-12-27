@@ -5,12 +5,16 @@ from board import Board
 from hud import HUD, Button, Text, Rectangle, Axis
 from visualizer import Visualizer
 from rules import Referee
-from moves import Move, PlaceWall, PlacePawn, MovePawn
+from ai import Fendoter
+from moves import Move, PlaceWall, PlacePawn, MovePawn, MovePawnAndWall
 from events import FendoEvent, WallEvent, FieldEvent, ButtonEvent, OutOfBoundsEvent
 from colors import *
 
 # Settings
-save_game = True
+ai = True
+ai_player = 2
+ai_brain = "random"
+save_game = False
 pawns = 7
 board_size = 7
 screen_width = 900
@@ -31,6 +35,8 @@ axis_label_size = int(field_width / 4)
 # Initializing
 board = Board(board_size, pawns)
 referee = Referee()
+if ai:
+    fendoter = Fendoter(ai_player, ai_brain)
 
 # HUD
 hud = HUD()
@@ -128,9 +134,22 @@ def saveGame():
         for move in board.getState()['moves_list']:
             print(move, file=file)
 
+def applyMove(move: Move): #TODO: move to board.py? ; use in loop
+    if isinstance(move, PlacePawn):
+        board.placePawn(move.coordinates)
+    elif isinstance(move, PlaceWall):
+        board.placeWall(move.coordinates, move.direction)
+    elif isinstance(move, MovePawnAndWall):
+        board.movePawn(move.start_coordinates, move.end_coordinates)
+        board.placeWall(move.end_coordinates, move.direction)
+
 # Main Loop
 running = True
 while running:
+    if ai and board.getTurn() == ai_player:
+        fendoter_move = fendoter.makeMove(board)
+        applyMove(fendoter_move)
+        endTurn()
     # Event Loop
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
