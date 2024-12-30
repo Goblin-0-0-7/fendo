@@ -90,8 +90,7 @@ class Fendoter():
             case "random":
                 return self.randomGrading(possible_moves)
             case "minimax":
-                ...
-                #grading_function = self.minimaxGrading #TODO: look up what this is
+                return self.minimaxGrading(new_boards, possible_moves)
             case "alpha-beta":
                 ...
                 #grading_function = self.alphaBetaGrading #TODO: look up what this is
@@ -122,6 +121,37 @@ class Fendoter():
         grade += FREEMOV_COEF*len(mov_freedom)
         # grade pawn amount # just for debug, not good grading method
         #grade += 10*len(board.getPawns(self.player))
+        #TODO: check for win and return inf (+/- wird danach negiert..)
         return grade
     
+    
+    def minimaxGrading(self, boards: list[Board], moves: list[Move]) -> Move:
+        best_move = boards[0]
+        best_grade = self.minimax(boards[0], 2, False)
+        for state in tqdm(boards):
+            grade = self.minimax(state, 1, False)
+            if grade > best_grade:
+                best_move = state
+                best_grade = grade
+        best_move_index = boards.index(best_move)
+        return moves[best_move_index]
         
+        
+    def minimax(self, board: Board, depth: int, maximizing_player: bool) -> int:
+        if depth == 0: #TODO: or self.ref.isGameOver(board):
+            return self.depth1Grading(board)
+        
+        if maximizing_player:
+            max_eval = float('-inf')
+            _, new_boards = self.calculateMoves(board)
+            for new_board in new_boards:
+                eval = self.minimax(new_board, depth - 1, False)
+                max_eval = max(max_eval, eval)
+            return max_eval
+        else:
+            min_eval = float('inf')
+            _, new_boards = self.calculateMoves(board)
+            for new_board in new_boards:
+                eval = self.minimax(new_board, depth - 1, True)
+                min_eval = min(min_eval, eval)
+            return min_eval

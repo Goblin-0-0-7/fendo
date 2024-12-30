@@ -13,7 +13,7 @@ from colors import *
 # Settings
 ai = True
 ai_player = 2
-ai_brain = "depth1"
+ai_brain = "minimax"
 save_game = False
 pawns = 7
 board_size = 7
