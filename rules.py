@@ -60,7 +60,7 @@ class Referee():
             else:
                 active_pawns = board_state['pawns1'] if board_state['turn'] == 1 else board_state['pawns2']
                 for pawn in active_pawns:
-                    pawn_positions.append(pawn.getPosition())
+                    pawn_positions.append(pawn.getCoordinates())
         for pawn_coordinates in pawn_positions:
             if pawn_coordinates == coordinates:
                 return True
@@ -79,7 +79,11 @@ class Referee():
         previous_move = board_state['moves_list'][-1]
         if previous_move.player == board_state['turn']:
             return False
+        # Check if the start field has an active pawn
         if not board_state['fields'][start_coordinates[0], start_coordinates[1]].getPawn().isActive():
+            return False
+        # Check if the end field is occupied
+        if board_state['fields'][end_coordinates[0], end_coordinates[1]].getPawn():
             return False
         return findValidPath(start_coordinates, end_coordinates, board_state['fields'])
     
@@ -97,7 +101,7 @@ class Referee():
         if isinstance(previous_move, MovePawn):
             return False
         for pawn in active_pawns:
-            if findValidPath(pawn.getPosition(), coordinates, board_state['fields']):
+            if findValidPath(pawn.getCoordinates(), coordinates, board_state['fields']):
                 return True
         return False
     

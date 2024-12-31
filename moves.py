@@ -16,7 +16,7 @@ class PlaceWall(Move):
         self.player = player
         
     def __str__(self):
-        return f"PlaceWall: {self.coordinates}, {self.direction}, {self.player}"
+        return f"PlaceWall: [{self.coordinates}, {self.direction}, {self.player}]"
         
 class PlacePawn(Move):
     
@@ -25,7 +25,7 @@ class PlacePawn(Move):
         self.player = player
         
     def __str__(self):
-        return f"PlacePawn: {self.coordinates}, {self.player}"
+        return f"PlacePawn: [{self.coordinates}, {self.player}]"
         
 class MovePawn(Move):
     
@@ -35,7 +35,7 @@ class MovePawn(Move):
         self.player = player
         
     def __str__(self):
-        return f"MovePawn: {self.start_coordinates}, {self.end_coordinates}, {self.player}"
+        return f"MovePawn: [{self.start_coordinates}, {self.end_coordinates}, {self.player}]"
     
 class MovePawnAndWall(Move):
     
@@ -46,4 +46,4 @@ class MovePawnAndWall(Move):
         self.player = player
         
     def __str__(self):
-        return f"MovePawnAndWall: {self.start_coordinates}, {self.end_coordinates}, {self.direction}, {self.player}"
+        return f"MovePawnAndWall: [{self.start_coordinates}, {self.end_coordinates}, {self.direction}, {self.player}]"

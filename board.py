@@ -18,7 +18,7 @@ class Pawn():
     def setCoordinates(self, coordinates: tuple[int, int]):
         self.coordinates = coordinates
         
-    def getPosition(self):
+    def getCoordinates(self):
         return self.coordinates
     
     def setActive(self):
@@ -290,10 +290,13 @@ class Board():
         else:
             raise ValueError('Invalid player number')
     
+    def getFields(self) -> np.ndarray[Field]:
+        return self.fields
+    
     def getFieldsFlat(self):
         return list(self.fields.flatten())
     
-    def getField(self, coordinates: tuple[int, int]):
+    def getField(self, coordinates: tuple[int, int]) -> Field:
         return self.fields[coordinates[0], coordinates[1]]
     
     def getSize(self):
@@ -385,3 +388,32 @@ class Board():
                 self.fields[i, j].cleanField()
         self.moves_list = [GameStart()]
         self.setStartConfiguration()
+        
+    def __str__(self) -> str:
+        grid = []
+        for y in range(self.size):
+            row = []
+            for x in range(self.size):
+                field_str = "O"
+                field: Field = self.fields[x, y]
+                if field.getPawn():
+                    player = field.getPawn().getPlayer()
+                    if player == 1:
+                        field_str = '1'
+                    elif player == 2:
+                        field_str = '2'
+                    else:
+                        field_str = 'P'
+                
+                if field.getWall('S'):
+                    row.append(f'\033[4m{field_str}\033[0m')
+                else:
+                    row.append(f'{field_str}')
+                if self.fields[x, y].getWall('E'):
+                    row.append('|')
+                else:
+                    row.append(' ')
+                    
+            row_str = ' '.join(row)
+            grid.append(row_str)
+        return f'Last move: {self.moves_list[-1].__str__()} by {self.moves_list[-1].player} || Winner: {self.winner}\n{'\n'.join(grid)}'
