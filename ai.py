@@ -292,8 +292,8 @@ class Fendoter():
                 value = eval
                 best_moves = [next_moves[new_boards.index(new_board)]]
                 # debug start
-                print(f"\nNew {new_board.getTurn()} Board (Grade: {eval}):\n")
-                print(new_board)
+                #print(f"\nNew {new_board.getTurn()} Board (Grade: {eval}):\n")
+                #print(new_board)
                 # debug end
             elif eval == value:
                 best_moves.append(next_moves[new_boards.index(new_board)])
@@ -301,4 +301,4 @@ class Fendoter():
                 chosen_move = random.choice(best_moves)
                 return chosen_move, value, TreeNode(children, value, board)
         chosen_move = random.choice(best_moves)
-        return best_moves, value, TreeNode(children, value, board)
+        return chosen_move, value, TreeNode(children, value, board)
