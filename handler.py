@@ -166,9 +166,13 @@ def aiThinking(brain_thread: Thread):
     visi.update()
 
 def aiMove(board):
+    t1 = datetime.datetime.now()
     fendoter_move = fendoter.makeMove(board)
     applyMove(fendoter_move)
     endTurn()
+    t2 = datetime.datetime.now()
+    delta_t = t2 - t1
+    print(f"AI move computation took: {delta_t.total_seconds()}s")
 
 def applyMove(move: Move): #TODO: move to board.py? ; use in loop
     if isinstance(move, PlacePawn):
