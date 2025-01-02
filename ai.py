@@ -76,13 +76,13 @@ class Fendoter():
                 move, grade, self.search_tree = self.negamax(board, depth=self.search_depth, p=1)
                 return move
             case "alpha-beta":
-                ...
-                #grading_function = self.alphaBetaGrading #TODO: look up what this is
+                move, grade , self.search_tree = self.alphabeta(board, depth=self.search_depth, alpha=float('-inf'), beta=float('inf'), p=1)
+                return move
             case _:
                 raise ValueError("Invalid grading method")
     
     
-    def calculateMoves(self, board: Board):
+    def calculateMoves(self, board: Board) -> tuple[list[Move], list[Board]]:
         # debug start
         #print("\nCurrent Board:\n")
         #print(board)
@@ -175,6 +175,40 @@ class Fendoter():
         grade = AREA_COEF * area_grade + FREEMOV_COEF * freedom_grade
         return grade
         
+    def gradingII(self, board: Board) -> int:
+        ''' Takes a board and returns the grade for the current player.'''
+
+        current_player = self.player
+        current_opponent = self.opponent
+
+        board.evaluateFields() # TODO: improve evaluation performance
+        if board.getWinner() == board.getTurn():
+            return float('inf')
+
+        # grade area
+        area_grade = board.getPlayerArea(current_player) - board.getPlayerArea(current_opponent)
+
+        # grade movement freedom
+        # freedom_grade = self.calculateMoves(board)[0] # prossessing time too long
+        current_pawns = board.getPawns(current_player)
+        opponent_pawns = board.getPawns(current_opponent)
+        freedom_grade, current_player_freedom_grade, opponent_freedom_grade = 0, 0, 0
+        for direction in ["N", "E", "S", "W"]: # estimate freedom by checking walls/pawns/boarders next to pawns
+            for pawn in current_pawns:
+                end_coords = board.getFields()[pawn.getCoordinates()].getNeighborCoords(direction)
+                if end_coords:
+                    if findValidPath(pawn.getCoordinates(), end_coords, board.getFields()):
+                        current_player_freedom_grade += 1
+            for pawn in opponent_pawns:
+                end_coords = board.getFields()[pawn.getCoordinates()].getNeighborCoords(direction)
+                if end_coords:
+                    if findValidPath(pawn.getCoordinates(), end_coords, board.getFields()):
+                        opponent_freedom_grade += 1
+
+        freedom_grade = (current_player_freedom_grade / len(current_pawns)) - (opponent_freedom_grade / len(opponent_pawns))
+        
+        grade = AREA_COEF * area_grade + FREEMOV_COEF * freedom_grade
+        return grade
         
     def minimax(self, board: Board, depth: int, maximizing_player: bool) -> tuple[int, list[TreeNode]]:
         if depth == 0:
@@ -219,7 +253,7 @@ class Fendoter():
         p: 1 for player, -1 for opponent
         '''
         if depth == 0:
-            grade = p * self.gradingI(board)
+            grade = p * self.gradingII(board)
             return None, grade, TreeNode([], grade, board)
         
         children = []
@@ -232,7 +266,34 @@ class Fendoter():
             #print(new_board)
             # debug end
             children.append(new_child)
+            eval = -eval
             if eval > max_eval:
                 max_eval = eval
                 best_move = next_moves[new_boards.index(new_board)]
         return best_move, max_eval, TreeNode(children, max_eval, board)
+    
+    def alphabeta(self, board: Board, depth: int, alpha: int, beta: int, p: int) -> tuple[int, list[TreeNode]]:
+        ''' Alpha-Beta Pruning algorithm 
+        p: 1 for player, -1 for opponent
+        '''
+        if depth == 0:
+            value = p * self.gradingII(board)
+            return None, value, TreeNode([], value, board)
+        
+        children = []
+        value = alpha
+        next_moves, new_boards = self.calculateMoves(board)
+        for new_board in new_boards:
+            _, eval, new_child = self.alphabeta(new_board, depth - 1, -beta, -value, -p)
+            children.append(new_child)
+            eval = -eval
+            if eval > value:
+                value = eval
+                best_move = next_moves[new_boards.index(new_board)]
+                # debug start
+                print(f"\nNew {new_board.getTurn()} Board (Grade: {eval}):\n")
+                print(new_board)
+                # debug end
+            if value >= beta:
+                return best_move, value, TreeNode(children, value, board)
+        return best_move, value, TreeNode(children, value, board)
