@@ -282,6 +282,7 @@ class Fendoter():
         
         children = []
         value = alpha
+        best_moves: list[Move] = []
         next_moves, new_boards = self.calculateMoves(board)
         for new_board in new_boards:
             _, eval, new_child = self.alphabeta(new_board, depth - 1, -beta, -value, -p)
@@ -289,11 +290,15 @@ class Fendoter():
             eval = -eval
             if eval > value:
                 value = eval
-                best_move = next_moves[new_boards.index(new_board)]
+                best_moves = [next_moves[new_boards.index(new_board)]]
                 # debug start
                 print(f"\nNew {new_board.getTurn()} Board (Grade: {eval}):\n")
                 print(new_board)
                 # debug end
+            elif eval == value:
+                best_moves.append(next_moves[new_boards.index(new_board)])
             if value >= beta:
-                return best_move, value, TreeNode(children, value, board)
-        return best_move, value, TreeNode(children, value, board)
+                chosen_move = random.choice(best_moves)
+                return chosen_move, value, TreeNode(children, value, board)
+        chosen_move = random.choice(best_moves)
+        return best_moves, value, TreeNode(children, value, board)
