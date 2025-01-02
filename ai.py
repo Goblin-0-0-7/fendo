@@ -48,17 +48,17 @@ class TreeNode():
 
 class Fendoter():
     
-    def __init__(self, player, grading_method: str) -> None:
+    def __init__(self, player, grading_method: str, search_depth) -> None:
         self.ref = Referee()
         self.player = player
         self.opponent = 3 - player #TODO: hardcoded, only works for 2 player
         self.grading_method = grading_method
+        self.search_depth = search_depth
         self.search_tree: TreeNode = TreeNode([], 0, None, True)
     
     def makeMove(self, board: Board) -> Move:
-        self.search_tree.setBoard(board)
         best_move: Move = self.evaluateMoves(board, self.grading_method)
-        self.search_tree.print()
+        #self.search_tree.print() # debug
         return best_move
     
     def evaluateMoves(self, board: Board, method: str) -> Move:
@@ -70,7 +70,11 @@ class Fendoter():
                 possible_moves, new_boards = self.calculateMoves(board)
                 return self.randomGrading(possible_moves)
             case "minimax":
-                return self.minimax(board, depth=1, maximizing_player=True)[0]
+                move, grade, self.search_tree = self.minimax(board, depth=self.search_depth, maximizing_player=True)
+                return move
+            case "negamax":
+                move, grade, self.search_tree = self.negamax(board, depth=self.search_depth, p=1)
+                return move
             case "alpha-beta":
                 ...
                 #grading_function = self.alphaBetaGrading #TODO: look up what this is
@@ -80,8 +84,8 @@ class Fendoter():
     
     def calculateMoves(self, board: Board):
         # debug start
-        print("\nCurrent Board:\n")
-        print(board)
+        #print("\nCurrent Board:\n")
+        #print(board)
         # debug end
         
         own_pawns: list[Pawn] = board.getPawns(board.getTurn())
@@ -128,7 +132,7 @@ class Fendoter():
     def depth1Eval(self, boards: list[Board], moves: list[Move]) -> Move:
         best_move = boards[0]
         best_grade = self.gradingI(best_move)
-        for state in tqdm(boards):
+        for state in boards:
             grade = self.gradingI(state)
             if grade > best_grade:
                 best_move = state
@@ -177,36 +181,58 @@ class Fendoter():
             grade = self.gradingI(board)
             if not maximizing_player:
                 grade = -grade
-            return None, grade, [TreeNode([], grade, board)]
+            return None, grade, TreeNode([], grade, board)
         
         children = []
         if maximizing_player:
             max_eval = float('-inf')
             next_moves, new_boards = self.calculateMoves(board)
-            for new_board in tqdm(new_boards):
-                _, eval, new_children = self.minimax(new_board, depth - 1, False)
+            for new_board in new_boards:
+                _, eval, new_child = self.minimax(new_board, depth - 1, False)
                 # debug start
-                print(f"\nNew {self.player} Board (Grade: {eval}):\n")
-                print(new_board)
+                #print(f"\nNew {self.player} Board (Grade: {eval}):\n")
+                #print(new_board)
                 # debug end
-                children.extend(new_children)
+                children.append(new_child)
                 if eval > max_eval:
                     max_eval = eval
                     best_move = next_moves[new_boards.index(new_board)]
-                #max_eval = max(max_eval, eval)
-            return best_move, max_eval, [TreeNode(children, max_eval, board)]
+            return best_move, max_eval, TreeNode(children, max_eval, board)
         else:
             min_eval = float('inf')
             next_moves, new_boards = self.calculateMoves(board)
-            for new_board in tqdm(new_boards):
-                _, eval, new_children = self.minimax(new_board, depth - 1, True)
+            for new_board in new_boards:
+                _, eval, new_child = self.minimax(new_board, depth - 1, True)
                 # debug start
-                print(f"\nNew {self.opponent} Board (Grade: {eval}):\n")
-                print(new_board)
+                #print(f"\nNew {self.opponent} Board (Grade: {eval}):\n")
+                #print(new_board)
                 # debug end
-                children.extend(new_children)
+                children.append(new_child)
                 if eval < min_eval:
                     min_eval = eval
                     best_move = next_moves[new_boards.index(new_board)]
-                #min_eval = min(min_eval, eval)
-            return best_move, min_eval, [TreeNode(children, min_eval, board)]
+            return best_move, min_eval, TreeNode(children, min_eval, board)
+        
+    
+    def negamax(self, board: Board, depth: int, p: int) -> tuple[int, list[TreeNode]]:
+        ''' Negamax algorithm 
+        p: 1 for player, -1 for opponent
+        '''
+        if depth == 0:
+            grade = p * self.gradingI(board)
+            return None, grade, TreeNode([], grade, board)
+        
+        children = []
+        max_eval = -p * float('inf')
+        next_moves, new_boards = self.calculateMoves(board)
+        for new_board in new_boards:
+            _, eval, new_child = self.negamax(new_board, depth - 1, -p)
+            # debug start
+            #print(f"\nNew {new_board.getTurn()} Board (Grade: {eval}):\n")
+            #print(new_board)
+            # debug end
+            children.append(new_child)
+            if eval > max_eval:
+                max_eval = eval
+                best_move = next_moves[new_boards.index(new_board)]
+        return best_move, max_eval, TreeNode(children, max_eval, board)
