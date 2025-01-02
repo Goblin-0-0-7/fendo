@@ -1,5 +1,6 @@
 import pygame
 import datetime
+from threading import Thread
 
 from board import Board
 from hud import HUD, Button, Text, Rectangle, Axis
@@ -13,7 +14,8 @@ from colors import *
 # Settings
 ai = True
 ai_player = 2
-ai_brain = "minimax"
+ai_brain = "negamax"
+ai_search_depth = 1
 save_game = False
 pawns = 7
 board_size = 7
@@ -36,7 +38,7 @@ axis_label_size = int(field_width / 4)
 board = Board(board_size, pawns)
 referee = Referee()
 if ai:
-    fendoter = Fendoter(ai_player, ai_brain)
+    fendoter = Fendoter(ai_player, ai_brain, search_depth = ai_search_depth)
 
 # HUD
 hud = HUD()
@@ -72,8 +74,22 @@ txt_winner =                Text(top = margin + board_width/2,
                                  font_size = winner_text_size,
                                  active=False,
                                  color = WHITE)
-rect_turn_indentifier = Rectangle(margin/3, margin + 1.8*board_width/3, field_width/5, field_width/5, ORANGE)
-rect_rules_status = Rectangle(margin/3, (3/2)*margin + board_width, field_width/5, field_width/5, GREEN)
+
+rect_turn_indentifier = Rectangle(top = margin/3,
+                                  left = margin + 1.8*board_width/3,
+                                  width = field_width/5,
+                                  height = field_width/5,
+                                  color = ORANGE)
+rect_rules_status =     Rectangle(top = margin/3,
+                                  left = (3/2)*margin + board_width,
+                                  width = field_width/5,
+                                  height = field_width/5,
+                                  color = GREEN)
+rect_ai_status =        Rectangle(top = (3/2)*margin + board_width,
+                                  left = (3/2)*margin + board_width,
+                                  width = field_width/5,
+                                  height = field_width/5,
+                                  color = GRAY)
 # add items to HUD
 hud.addItem(btn_undo)
 hud.addItem(btn_clear)
@@ -88,9 +104,11 @@ hud.addItem(txt_player2field_counter)
 hud.addItem(txt_winner)
 hud.addItem(rect_turn_indentifier)
 hud.addItem(rect_rules_status)
-
+hud.addItem(rect_ai_status)
 
 visi = Visualizer(screen_width, board_width, margin, wall_width, board, hud)
+
+
 
 def update():
     board.evaluateFields()
@@ -134,6 +152,24 @@ def saveGame():
         for move in board.getState()['moves_list']:
             print(move, file=file)
 
+def aiThinking(brain_thread: Thread):
+    color_index = 0
+    rotating_color = [BLACK, RED]
+    rotating_color_len = len(rotating_color)
+    clock = pygame.time.Clock()
+    while brain_thread.is_alive():
+        rect_ai_status.setColor(rotating_color[color_index])
+        color_index = (color_index + 1) % rotating_color_len
+        visi.update()
+        clock.tick(50)
+    rect_ai_status.setColor(GRAY)
+    visi.update()
+
+def aiMove(board):
+    fendoter_move = fendoter.makeMove(board)
+    applyMove(fendoter_move)
+    endTurn()
+
 def applyMove(move: Move): #TODO: move to board.py? ; use in loop
     if isinstance(move, PlacePawn):
         board.placePawn(move.coordinates)
@@ -143,13 +179,20 @@ def applyMove(move: Move): #TODO: move to board.py? ; use in loop
         board.movePawn(move.start_coordinates, move.end_coordinates)
         board.placeWall(move.end_coordinates, move.direction)
 
+
+# Threads
+ai_brain_thread = Thread(target=aiMove, args=(board,), daemon=True)
+ai_helper_thread = Thread(target=aiThinking, args=(ai_brain_thread,), daemon=True)
+
 # Main Loop
 running = True
 while running:
     if ai and board.getTurn() == ai_player:
-        fendoter_move = fendoter.makeMove(board)
-        applyMove(fendoter_move)
-        endTurn()
+        if not ai_brain_thread.is_alive():
+            ai_brain_thread = Thread(target=aiMove, args=(board,), daemon=True)
+            ai_brain_thread.start()
+            ai_helper_thread = Thread(target=aiThinking, args=(ai_brain_thread,), daemon=True)
+            ai_helper_thread.start()
     # Event Loop
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
