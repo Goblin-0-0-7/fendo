@@ -364,6 +364,9 @@ class Board():
     def getTurn(self):
         return self.turn
     
+    def getCurrentOpponent(self):
+        return 3 - self.turn # Currently hardcoded for 2 player
+    
     def endTurn(self):
         self.turn = 2 if self.turn == 1 else 1
         self.clearSelection()

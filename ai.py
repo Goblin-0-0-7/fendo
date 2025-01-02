@@ -3,7 +3,7 @@ from tqdm import tqdm
 
 from board import Board, Field, Pawn
 from moves import Move, PlacePawn, MovePawnAndWall, PlaceWall, MovePawn
-from rules import Referee
+from rules import Referee, findValidPath
 
 
 AREA_COEF = 1
@@ -45,6 +45,7 @@ class TreeNode():
                     sub_child.visualize(level + 1)
             else:
                 child.visualize(level + 1)
+
 class Fendoter():
     
     def __init__(self, player, grading_method: str) -> None:
@@ -59,6 +60,23 @@ class Fendoter():
         best_move: Move = self.evaluateMoves(board, self.grading_method)
         self.search_tree.print()
         return best_move
+    
+    def evaluateMoves(self, board: Board, method: str) -> Move:
+        match method:
+            case "depth1":
+                possible_moves, new_boards = self.calculateMoves(board)
+                return self.depth1Eval(new_boards, possible_moves)
+            case "random":
+                possible_moves, new_boards = self.calculateMoves(board)
+                return self.randomGrading(possible_moves)
+            case "minimax":
+                return self.minimax(board, depth=1, maximizing_player=True)[0]
+            case "alpha-beta":
+                ...
+                #grading_function = self.alphaBetaGrading #TODO: look up what this is
+            case _:
+                raise ValueError("Invalid grading method")
+    
     
     def calculateMoves(self, board: Board):
         # debug start
@@ -103,118 +121,62 @@ class Fendoter():
                         
         return moves, new_boards
     
-    #TODO: not needed anymore
-    def simulateMove(self, move: Move, board_state: dict) -> dict:
-        new_board_state = board_state.copy()
-        new_board_state['moves_list'].append(move)
-        match move:
-            case PlacePawn():
-                new_board_state['fields'][move.coordinates].addPawn(Pawn(move.player))
-            case PlaceWall():
-                new_board_state['fields'][move.coordinates].placeWall(move.direction)
-                if move.direction == 'N' and move.coordinates[1] != 0:
-                    new_board_state['fields'][move.coordinates[0], move.coordinates[1] - 1].placeWall('S')
-                elif move.direction == 'E' and move.coordinates[0] != self.size - 1:
-                    new_board_state['fields'][move.coordinates[0] + 1, move.coordinates[1]].placeWall('W')
-                elif move.direction == 'S' and move.coordinates[1] != self.size - 1:
-                    new_board_state['fields'][move.coordinates[0], move.coordinates[1] + 1].placeWall('N')
-                elif move.direction == 'W' and move.coordinates[0] != 0:
-                    new_board_state['fields'][move.coordinates[0] - 1, move.coordinates[1]].placeWall('E')
-            case MovePawn():
-                new_board_state['fields'][move.start_coordinates].removePawn()
-                new_board_state['fields'][move.end_coordinates].addPawn(Pawn(move.player))
-            case MovePawnAndWall():
-                new_board_state = self.simulateMove(MovePawn(move.start_coordinates, move.end_coordinates, move.player), new_board_state)
-                new_board_state = self.simulateMove(PlaceWall(move.end_coordinates, move.direction, move.player), new_board_state)
-        return new_board_state
-    
-    def evaluateMoves(self, board: Board, method: str) -> Move:
-        match method:
-            case "depth1":
-                possible_moves, new_boards = self.calculateMoves(board)
-                return self.depth1Eval(new_boards, possible_moves)
-            case "random":
-                possible_moves, new_boards = self.calculateMoves(board)
-                return self.randomGrading(possible_moves)
-            case "minimax":
-                #return self.minimaxGrading(new_boards, possible_moves, depth=1)
-                return self.minimax(board, depth=1, maximizing_player=True)[0]
-            case "alpha-beta":
-                ...
-                #grading_function = self.alphaBetaGrading #TODO: look up what this is
-            case _:
-                raise ValueError("Invalid grading method")
-    
     
     def randomGrading(self, moves: list[Move]) -> int:
         return random.choice(moves)
 
     def depth1Eval(self, boards: list[Board], moves: list[Move]) -> Move:
         best_move = boards[0]
-        best_grade = self.depth1Grading(best_move)
+        best_grade = self.gradingI(best_move)
         for state in tqdm(boards):
-            grade = self.depth1Grading(state)
+            grade = self.gradingI(state)
             if grade > best_grade:
                 best_move = state
                 best_grade = grade
         best_move_index = boards.index(best_move)
         return moves[best_move_index]
     
-    def depth1Grading(self, board: Board) -> int:
+    def gradingI(self, board: Board) -> int:
+        ''' Takes a board and returns the grade for the current player.'''
+
+        current_player = board.getTurn()
+        current_opponent = board.getCurrentOpponent()
+
         board.evaluateFields() # TODO: improve evaluation performance
         if board.getWinner() == board.getTurn():
-            if board.getTurn() == self.player:
-                return float('inf')
-            else:
-                return float('-inf')
+            return float('inf')
+
         # grade area
-        area_grade = (board.getPlayerArea(self.player) - board.getPlayerArea(self.opponent))
+        area_grade = board.getPlayerArea(current_player) - board.getPlayerArea(current_opponent)
+
         # grade movement freedom
         # freedom_grade = self.calculateMoves(board)[0] # prossessing time too long
-        own_pawns = board.getPawns(board.getTurn())
-        opponent_pawns = board.getPawns(board.getTurn())
-        freedom_grade, own_freedom_grade, opponent_freedom_grade = 0, 0, 0
-        for direction in ["N", "E", "S", "W"]: # estimate freedom by checking walls
-            for pawn in own_pawns: # estimate freedom by checking walls
-                field: Field = board.getFields()[pawn.getCoordinates()]
-                if field.getWall(direction):
-                    own_freedom_grade += 1
-                elif field.getNeighborCoords(direction):
-                    if board.getField(field.getNeighborCoords(direction)).getPawn():
-                        own_freedom_grade += 1
-            for pawn in opponent_pawns: # estimate freedom by checking walls
-                field: Field = board.getFields()[pawn.getCoordinates()]
-                if field.getWall(direction):
-                    opponent_freedom_grade += 1
-                elif field.getNeighborCoords(direction):
-                    if board.getField(field.getNeighborCoords(direction)).getPawn():
+        current_pawns = board.getPawns(current_player)
+        opponent_pawns = board.getPawns(current_opponent)
+        freedom_grade, current_player_freedom_grade, opponent_freedom_grade = 0, 0, 0
+        for direction in ["N", "E", "S", "W"]: # estimate freedom by checking walls/pawns/boarders next to pawns
+            for pawn in current_pawns:
+                end_coords = board.getFields()[pawn.getCoordinates()].getNeighborCoords(direction)
+                if end_coords:
+                    if findValidPath(pawn.getCoordinates(), end_coords, board.getFields()):
+                        current_player_freedom_grade += 1
+            for pawn in opponent_pawns:
+                end_coords = board.getFields()[pawn.getCoordinates()].getNeighborCoords(direction)
+                if end_coords:
+                    if findValidPath(pawn.getCoordinates(), end_coords, board.getFields()):
                         opponent_freedom_grade += 1
-        freedom_grade = (own_freedom_grade / len(own_pawns)) - (opponent_freedom_grade / len(opponent_pawns))
+
+        freedom_grade = (current_player_freedom_grade / len(current_pawns)) - (opponent_freedom_grade / len(opponent_pawns))
         
         grade = AREA_COEF * area_grade + FREEMOV_COEF * freedom_grade
         return grade
-    
-    
-    def minimaxGrading(self, boards: list[Board], moves: list[Move], depth: int) -> Move:
-        children: list[TreeNode] = []
-        best_move = boards[0]
-        best_grade, new_children = self.minimax(boards[0], depth, False)
-        children.extend(new_children)
-        for state in tqdm(boards):
-            grade, new_children = self.minimax(state, depth, False)
-            if grade > best_grade:
-                best_move = state
-                best_grade = grade
-        children.extend(new_children)
-        best_move_index = boards.index(best_move)
-        self.search_tree.setChildren(children)
-        self.search_tree.setGrade(best_grade)
-        return moves[best_move_index]
         
         
     def minimax(self, board: Board, depth: int, maximizing_player: bool) -> tuple[int, list[TreeNode]]:
         if depth == 0:
-            grade = self.depth1Grading(board)
+            grade = self.gradingI(board)
+            if not maximizing_player:
+                grade = -grade
             return None, grade, [TreeNode([], grade, board)]
         
         children = []
@@ -243,7 +205,7 @@ class Fendoter():
                 print(new_board)
                 # debug end
                 children.extend(new_children)
-                if eval > min_eval:
+                if eval < min_eval:
                     min_eval = eval
                     best_move = next_moves[new_boards.index(new_board)]
                 #min_eval = min(min_eval, eval)
