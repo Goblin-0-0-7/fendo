@@ -40,19 +40,19 @@ def checkPerformance(test_func: str, board: Board, number: int = 1) -> float:
         case 'makeMove':
             #execution_time = timeit(lambda: fendoter.makeMove(board), number=number)
             execution_time = 0
-            cProfile.runctx("fendoter.makeMove(board)", globals(), locals())
+            cProfile.runctx("fendoter.makeMove(board)", globals(), locals(), sort='tottime')
         case 'calculateMoves':
             #execution_time = timeit(lambda: fendoter.calculateMoves(board), number=number)
             execution_time = 0
-            cProfile.runctx("fendoter.calculateMoves(board)", globals(), locals())
+            cProfile.runctx("fendoter.calculateMoves(board)", globals(), locals(), sort='tottime')
         case 'evaluateFields':
             #execution_time = timeit(lambda: board.evaluateFields, number=number)
             execution_time = 0
-            cProfile.runctx("board.evaluateFields", globals(), locals())
+            cProfile.runctx("board.evaluateFields", globals(), locals(), sort='tottime')
         case 'gradingII':
             #execution_time = timeit(lambda: fendoter.gradingII(board), number=number)
             execution_time = 0
-            cProfile.runctx("fendoter.gradingII(board)", globals(), locals())
+            cProfile.runctx("fendoter.gradingII(board)", globals(), locals(), sort='tottime')
         case 'legalPlacePawn':
             coords = random.choice(board.getFieldsFlat()).getCoordinates()
             player = random.randint(1, 2)
@@ -129,7 +129,7 @@ if __name__ == "__main__":
     
     ai_player = 1
     ai_brain = "alpha-beta"
-    ai_search_depth = 2
+    ai_search_depth = 3
     fendoter = Fendoter(ai_player, ai_brain, ai_search_depth)
     print("Performance test:")
     
