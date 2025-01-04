@@ -171,10 +171,11 @@ class Board():
         self.max_pawns = max_pawns
         # board objects
         self.fields: np.ndarray[Field] = np.empty((board_size, board_size), dtype=Field)
-        for i in range(board_size):
-            for j in range(board_size):
-                self.fields[i, j] = Field(board_size)
-                self.fields[i, j].setCoordinates((i, j))
+        if new:
+            for i in range(board_size):
+                for j in range(board_size):
+                    self.fields[i, j] = Field(board_size)
+                    self.fields[i, j].setCoordinates((i, j))
         self.areas: list[Area] = []
         self.pawns1: list[Pawn] = []
         self.pawns2: list[Pawn] = []
