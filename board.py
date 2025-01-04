@@ -90,17 +90,16 @@ class Field():
         self.pawn = None
     
     def getWall(self, direction):
-        match direction:
-            case 'N':
-                return self.wallN
-            case 'E':
-                return self.wallE
-            case 'S':
-                return self.wallS
-            case 'W':
-                return self.wallW
-            case _:
-                raise ValueError('Invalid direction')
+        if direction == 'N':
+            return self.wallN
+        elif direction == 'E':
+            return self.wallE
+        elif direction == 'S':
+            return self.wallS
+        elif direction == 'W':
+            return self.wallW
+        else:
+            raise ValueError('Invalid direction')
     
     def getPawn(self):
         return self.pawn
@@ -143,17 +142,37 @@ class Field():
     
     def getNeighborCoords(self, direction: str) -> 'Field':
         ''' Returns the coordinates of the field in the given direction '''
-        match direction:
-            case 'N':
-                return self.getNorth()
-            case 'E':
-                return self.getEast()
-            case 'S':
-                return self.getSouth()
-            case 'W':
-                return self.getWest()
-            case _:
-                raise ValueError('Invalid direction')
+        if direction == 'N':
+            return self.getNorth()
+        elif direction == 'E':
+            return self.getEast()
+        elif direction == 'S':
+            return self.getSouth()
+        elif direction == 'W':
+            return self.getWest()
+        else:
+            raise ValueError('Invalid direction')
+    
+    def getNeighborCoordsFast(self, direction: str) -> 'Field':
+        ''' Returns the coordinates of the field in the given direction '''
+        if direction == 'N':
+            if self.coordinates[1] == 0:
+                return None
+            return self.coordinates[0], self.coordinates[1] - 1
+        elif direction == 'E':
+            if self.coordinates[0] == self.board_size - 1:
+                return None
+            return self.coordinates[0] + 1, self.coordinates[1]
+        elif direction == 'S':
+            if self.coordinates[1] == self.board_size - 1:
+                return None
+            return self.coordinates[0], self.coordinates[1] + 1
+        elif direction == 'W':
+            if self.coordinates[0] == 0:
+                return None
+            return self.coordinates[0] - 1, self.coordinates[1]
+        else:
+            return ValueError('Invalid direction')
     
     def cleanField(self):
         self.removeWall('N')

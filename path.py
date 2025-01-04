@@ -65,13 +65,7 @@ def pathValidStep(x, y, horizontal_direction, vertical_direction, end_coordinate
     return False
 
 def checkPathBlocked(direction: str, field: 'Field'):
-    if direction == 'N' and field.getWall(direction):
-        return True
-    if direction == 'E' and field.getWall(direction):
-        return True
-    if direction == 'S' and field.getWall(direction):
-        return True
-    if direction == 'W' and field.getWall(direction):
+    if field.getWall(direction):
         return True
     return False
 
@@ -136,10 +130,9 @@ def getValidNeighbors(field: 'Field', board: 'Board') -> list['Field']:
     neighbors = []
     for direction in ['N', 'E', 'S', 'W']:
         if not checkPathBlocked(direction, field):
-            neighbor_coords = field.getNeighborCoords(direction)
+            neighbor_coords = field.getNeighborCoordsFast(direction)
             if neighbor_coords:
-                neighbor = board.getField(neighbor_coords)
-                neighbors.append(neighbor)
+                neighbors.append(board.getField(neighbor_coords))
     return neighbors
 
 def findOwner(area: 'Area') -> int:
