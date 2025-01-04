@@ -2,16 +2,16 @@ import random
 from timeit import timeit
 import cProfile
 
-from board import Board
+from board import Board, Field, Pawn
 from ai import Fendoter
 from rules import Referee
-from moves import PlacePawn, MovePawn, MovePawnAndWall
+from moves import PlacePawn, MovePawn, MovePawnAndWall, PlaceWall
 
 
 def generateBoard() -> Board:
     board_size = 7
     max_pawns = 7
-    board = Board(board_size, max_pawns)
+    board = Board(board_size, max_pawns, new=False)
     random_turn = random.randint(1, 2)
     board.setTurn(random_turn)
     
@@ -42,11 +42,17 @@ def checkPerformance(test_func: str, board: Board, number: int = 1) -> float:
             execution_time = 0
             cProfile.runctx("fendoter.makeMove(board)", globals(), locals())
         case 'calculateMoves':
-            execution_time = timeit(lambda: fendoter.calculateMoves(board), number=number)
+            #execution_time = timeit(lambda: fendoter.calculateMoves(board), number=number)
+            execution_time = 0
+            cProfile.runctx("fendoter.calculateMoves(board)", globals(), locals())
         case 'evaluateFields':
-            execution_time = timeit(lambda: board.evaluateFields, number=number)
+            #execution_time = timeit(lambda: board.evaluateFields, number=number)
+            execution_time = 0
+            cProfile.runctx("board.evaluateFields", globals(), locals())
         case 'gradingII':
-            execution_time = timeit(lambda: fendoter.gradingII(board), number=number)
+            #execution_time = timeit(lambda: fendoter.gradingII(board), number=number)
+            execution_time = 0
+            cProfile.runctx("fendoter.gradingII(board)", globals(), locals())
         case 'legalPlacePawn':
             coords = random.choice(board.getFieldsFlat()).getCoordinates()
             player = random.randint(1, 2)
@@ -66,8 +72,55 @@ def checkPerformance(test_func: str, board: Board, number: int = 1) -> float:
             raise ValueError("Invalid test function")
         
     return execution_time
+
+def checkLoadBoard(board: Board) -> None:
+    print("Original board:")
+    print(board)
+    own_pawns: list[Pawn] = board.getPawns(board.getTurn())
+    fields: list[Field] = board.getFieldsFlat()
+    board_state = board.getState()
     
+    ref = Referee()
+    place_pawn_flag = True
+    move_pawn_flag = True
+    place_wall_flag = True    
+    
+    for pawn in own_pawns:
+        for field in fields:
+            if place_pawn_flag and ref.checkLegalMove(PlacePawn(field.getCoordinates(), board.getTurn()), board_state):
+                place_pawn_flag = False
+                new_board = Board(board_state['size'], board_state['max_pawns'], new=False)
+                #new_board.loadState(copy.deepcopy(board_state))
+                new_board.loadState(board_state)
+                new_board.placePawn(field.getCoordinates(), board.getTurn())
+                new_board.endTurn()
+                print("Place Pawn:")
+                print(new_board)
+            if move_pawn_flag or place_wall_flag:
+                for direction in ["N", "E", "S", "W"]:
+                    if move_pawn_flag and ref.checkLegalMove(MovePawnAndWall(pawn.getCoordinates(), field.getCoordinates(), direction, board.getTurn()), board_state):
+                        move_pawn_flag = False
+                        new_board = Board(board_state['size'], board_state['max_pawns'], new=False)
+                        #new_board.loadState(copy.deepcopy(board_state))
+                        new_board.loadState(board_state)
+                        new_board.movePawn(pawn.getCoordinates(), field.getCoordinates())
+                        new_board.placeWall(field.getCoordinates(), direction, board.getTurn())
+                        new_board.endTurn()
+                        print("Move Pawn and Place Wall:")
+                        print(new_board)
+                    if place_wall_flag and ref.checkLegalMove(PlaceWall(field.getCoordinates(), direction, board.getTurn()), board_state):
+                        place_wall_flag = False
+                        new_board = Board(board_state['size'], board_state['max_pawns'], new=False)
+                        #new_board.loadState(copy.deepcopy(board_state))
+                        new_board.loadState(board_state)
+                        new_board.placeWall(field.getCoordinates(), direction, board.getTurn())
+                        new_board.endTurn()
+                        print("Place Wall:")
+                        print(new_board)
+    
+
 if __name__ == "__main__":
+    timer = True
     test_func = "makeMove" # makeMove, calculateMoves, evaluateFields, gradingII, legalPlacePawn, legalMovePawn, legalMovePawnAndWall
     different_boards = 1
     repetitions = 1
@@ -84,16 +137,18 @@ if __name__ == "__main__":
         file.write(f"{test_func}\n")
     
     for _ in range(different_boards):
-        random_board = Board(7, 7)
+        random_board = Board(7, 7, new=True)
 #        random_board = generateBoard()
 #        print(random_board)
         
-        execution_time = checkPerformance(test_func, random_board, repetitions)
-        
-        with open("performance_data.csv", "a") as file:
-            board_str = random_board.__str__()
-            #file.write(f"{board_str};{execution_time:.6f}\n")
-            file.write(f"{execution_time:.6f}\n")
-        print(f"{test_func} took {execution_time:.6f} seconds")
+        if timer:
+            execution_time = checkPerformance(test_func, random_board, repetitions)
+        else:
+            checkLoadBoard(random_board)
+        # with open("performance_data.csv", "a") as file:
+        #     board_str = random_board.__str__()
+        #     #file.write(f"{board_str};{execution_time:.6f}\n")
+        #     file.write(f"{execution_time:.6f}\n")
+        # print(f"{test_func} took {execution_time:.6f} seconds")
     
 

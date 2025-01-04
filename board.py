@@ -31,15 +31,15 @@ class Pawn():
         return self.active
 
 class Field():  
-    def __init__(self, size: int):
+    def __init__(self, size: int, coords: tuple[int, int] = (-1, -1), wallN: bool = False, wallE: bool = False, wallS: bool = False, wallW: bool = False, pawn: Pawn = None, owner: int = 0):
         self.board_size = size
-        self.coordinates = (-1, -1)
-        self.wallN = False
-        self.wallE = False
-        self.wallS = False
-        self.wallW = False
-        self.pawn: Pawn = None
-        self.owner = 0
+        self.coordinates = coords
+        self.wallN = wallN
+        self.wallE = wallE
+        self.wallS = wallS
+        self.wallW = wallW
+        self.pawn: Pawn = pawn
+        self.owner = owner
 
     
     def setCoordinates(self, coordinates: tuple[int, int]):
@@ -165,7 +165,7 @@ class Field():
 
 
 class Board():
-    def __init__(self, board_size: int, max_pawns: int):
+    def __init__(self, board_size: int, max_pawns: int, new: bool = True):
         # board settings
         self.size = board_size
         self.max_pawns = max_pawns
@@ -184,7 +184,8 @@ class Board():
         self.selection: Pawn = None
         self.winner = 0
         
-        self.setStartConfiguration()
+        if new:
+            self.setStartConfiguration()
                 
     def placeWall(self, coordinates: tuple[int, int], direction: str, player: int = 0):
         
@@ -355,11 +356,19 @@ class Board():
         self.size = state['size']
         self.max_pawns = state['max_pawns']
         self.turn = state['turn']
-        self.pawns1 = state['pawns1']
-        self.pawns2 = state['pawns2']
-        self.fields = state['fields']
-        self.moves_list = state['moves_list']
-        self.areas = state['areas']
+        for pawn in state['pawns1']:
+            self.pawns1.append(Pawn(pawn.player, pawn.coordinates))
+        for pawn in state['pawns2']:
+            self.pawns2.append(Pawn(pawn.player, pawn.coordinates))
+        for field in state['fields'].flatten():
+            pawn = Pawn(field.pawn.player, field.pawn.coordinates) if field.pawn else None
+            self.fields[field.coordinates[0], field.coordinates[1]] = Field(self.size, field.coordinates, field.wallN, field.wallE, field.wallS, field.wallW, pawn, field.owner)
+        for move in state['moves_list']:
+            if isinstance(move, GameStart):
+                continue
+            self.moves_list.append(move)
+        for area in state['areas']:
+            self.areas.append(area)
     
     def setTurn(self, turn: int):
         self.turn = turn

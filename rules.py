@@ -28,9 +28,11 @@ class Referee():
             case MovePawnAndWall():
                 if self.checkLegalMove(MovePawn(move.start_coordinates, move.end_coordinates, move.player), board_state):
                     # Manipulate board_state to use checkWallPlace
-                    board_state_copy = copy.deepcopy(board_state)
-                    board_state_copy['moves_list'].append(MovePawn(move.start_coordinates, move.end_coordinates, move.player))
-                    return self.checkLegalMove(PlaceWall(move.end_coordinates, move.direction, move.player), board_state_copy)
+                    board_state['moves_list'].append(MovePawn(move.start_coordinates, move.end_coordinates, move.player))
+                    legal = self.checkLegalMove(PlaceWall(move.end_coordinates, move.direction, move.player), board_state)
+                    # Undo the manipulation
+                    board_state['moves_list'].pop()
+                    return legal
                 return False
             case _:
                 raise ValueError('Invalid move')

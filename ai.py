@@ -90,7 +90,7 @@ class Fendoter():
         
         own_pawns: list[Pawn] = board.getPawns(board.getTurn())
         fields: list[Field] = board.getFieldsFlat()
-        board_state: dict = copy.deepcopy(board.getState())
+        board_state: dict = board.getState()
 
         moves = []
         new_boards = []
@@ -99,8 +99,9 @@ class Fendoter():
                 # Place new Pawn
                 if self.ref.checkLegalMove(PlacePawn(field.getCoordinates(), board.getTurn()), board_state):
                     moves.append(PlacePawn(field.getCoordinates(), board.getTurn()))
-                    new_board = Board(board_state['size'], board_state['max_pawns'])
-                    new_board.loadState(copy.deepcopy(board_state))
+                    new_board = Board(board_state['size'], board_state['max_pawns'], new=False)
+                    #new_board.loadState(copy.deepcopy(board_state))
+                    new_board.loadState(board_state)
                     new_board.placePawn(field.getCoordinates(), board.getTurn())
                     new_board.endTurn()
                     new_boards.append(new_board)
@@ -108,8 +109,9 @@ class Fendoter():
                     # Move Pawn and place Wall
                     if self.ref.checkLegalMove(MovePawnAndWall(pawn.getCoordinates(), field.getCoordinates(), direction, board.getTurn()), board_state):
                         moves.append(MovePawnAndWall(pawn.getCoordinates(), field.getCoordinates(), direction, board.getTurn()))
-                        new_board = Board(board_state['size'], board_state['max_pawns'])
-                        new_board.loadState(copy.deepcopy(board_state))
+                        new_board = Board(board_state['size'], board_state['max_pawns'], new=False)
+                        #new_board.loadState(copy.deepcopy(board_state))
+                        new_board.loadState(board_state)
                         new_board.movePawn(pawn.getCoordinates(), field.getCoordinates())
                         new_board.placeWall(field.getCoordinates(), direction, board.getTurn())
                         new_board.endTurn()
@@ -117,8 +119,9 @@ class Fendoter():
                     # Place Wall without moving Pawn
                     if self.ref.checkLegalMove(PlaceWall(field.getCoordinates(), direction, board.getTurn()), board_state):
                         moves.append(PlaceWall(field.getCoordinates(), direction, board.getTurn()))
-                        new_board = Board(board_state['size'], board_state['max_pawns'])
-                        new_board.loadState(copy.deepcopy(board_state))
+                        new_board = Board(board_state['size'], board_state['max_pawns'], new=False)
+                        #new_board.loadState(copy.deepcopy(board_state))
+                        new_board.loadState(board_state)
                         new_board.placeWall(field.getCoordinates(), direction, board.getTurn())
                         new_board.endTurn()
                         new_boards.append(new_board)
