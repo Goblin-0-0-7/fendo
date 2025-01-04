@@ -14,8 +14,8 @@ from colors import *
 # Settings
 ai = True
 ai_player = 2
-ai_brain = "negamax"
-ai_search_depth = 1
+ai_brain = "alpha-beta"
+ai_search_depth = 2
 save_game = False
 pawns = 7
 board_size = 7
@@ -38,7 +38,7 @@ axis_label_size = int(field_width / 4)
 board = Board(board_size, pawns)
 referee = Referee()
 if ai:
-    fendoter = Fendoter(ai_player, ai_brain, search_depth = ai_search_depth)
+    fendoter = Fendoter(ai_player, ai_brain, ai_search_depth)
 
 # HUD
 hud = HUD()
@@ -182,6 +182,8 @@ def applyMove(move: Move): #TODO: move to board.py? ; use in loop
     elif isinstance(move, MovePawnAndWall):
         board.movePawn(move.start_coordinates, move.end_coordinates)
         board.placeWall(move.end_coordinates, move.direction)
+    else:
+        raise ValueError("AI: Invalid move")
 
 
 # Threads

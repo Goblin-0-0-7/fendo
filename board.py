@@ -293,7 +293,7 @@ class Board():
     def getFields(self) -> np.ndarray[Field]:
         return self.fields
     
-    def getFieldsFlat(self):
+    def getFieldsFlat(self) -> list[Field]:
         return list(self.fields.flatten())
     
     def getField(self, coordinates: tuple[int, int]) -> Field:
@@ -360,6 +360,9 @@ class Board():
         self.fields = state['fields']
         self.moves_list = state['moves_list']
         self.areas = state['areas']
+    
+    def setTurn(self, turn: int):
+        self.turn = turn
     
     def getTurn(self):
         return self.turn

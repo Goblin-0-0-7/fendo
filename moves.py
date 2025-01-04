@@ -8,6 +8,11 @@ class GameStart(Move):
     def __str__(self):
         return "GameStart"
 
+class GameEnd(Move):
+    
+    def __str__(self):
+        return "GameEnd"
+
 class PlaceWall(Move):
     
     def __init__(self, coordinates, direction, player):

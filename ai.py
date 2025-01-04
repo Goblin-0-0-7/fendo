@@ -2,7 +2,7 @@ import random, copy
 from tqdm import tqdm
 
 from board import Board, Field, Pawn
-from moves import Move, PlacePawn, MovePawnAndWall, PlaceWall, MovePawn
+from moves import Move, PlacePawn, MovePawnAndWall, PlaceWall, MovePawn, GameEnd
 from rules import Referee, findValidPath
 
 
@@ -298,7 +298,13 @@ class Fendoter():
             elif eval == value:
                 best_moves.append(next_moves[new_boards.index(new_board)])
             if value >= beta:
-                chosen_move = random.choice(best_moves)
+                if best_moves:
+                    chosen_move = random.choice(best_moves)
+                else:
+                    chosen_move = GameEnd()
                 return chosen_move, value, TreeNode(children, value, board)
-        chosen_move = random.choice(best_moves)
+        if best_moves:
+            chosen_move = random.choice(best_moves)
+        else:
+            chosen_move = GameEnd()
         return chosen_move, value, TreeNode(children, value, board)
