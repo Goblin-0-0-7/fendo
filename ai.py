@@ -8,6 +8,7 @@ from rules import Referee, findValidPath
 
 AREA_COEF = 1
 FREEMOV_COEF = 0.3
+PAWN_BARRIER_COEF = 0.5
 
 
 class TreeNode():
@@ -198,15 +199,33 @@ class Fendoter():
         freedom_grade, current_player_freedom_grade, opponent_freedom_grade = 0, 0, 0
         for direction in ["N", "E", "S", "W"]: # estimate freedom by checking walls/pawns/boarders next to pawns
             for pawn in current_pawns:
-                end_coords = board.getFields()[pawn.getCoordinates()].getNeighborCoords(direction)
-                if end_coords:
-                    if findValidPath(pawn.getCoordinates(), end_coords, board.getFields()):
-                        current_player_freedom_grade += 1
+                if (pawn.getCoordinates()[0] == 0 and direction == "W") or (pawn.getCoordinates()[0] == board.getSize() - 1 and direction == "E") or (pawn.getCoordinates()[1] == 0 and direction == "N") or (pawn.getCoordinates()[1] == board.getSize() - 1 and direction == "S"):
+                    current_player_freedom_grade -=1
+                elif board.getFields()[pawn.getCoordinates()].getWall(direction):
+                    current_player_freedom_grade -= 1
+                else:
+                    end_coords = board.getFields()[pawn.getCoordinates()].getNeighborCoords(direction)
+                    if end_coords:
+                        if board.getField(end_coords).getPawn():
+                            current_player_freedom_grade -= PAWN_BARRIER_COEF*1
+                #end_coords = board.getFields()[pawn.getCoordinates()].getNeighborCoords(direction)
+                #if end_coords:
+                #    if findValidPath(pawn.getCoordinates(), end_coords, board.getFields()):
+                #        current_player_freedom_grade += 1
             for pawn in opponent_pawns:
-                end_coords = board.getFields()[pawn.getCoordinates()].getNeighborCoords(direction)
-                if end_coords:
-                    if findValidPath(pawn.getCoordinates(), end_coords, board.getFields()):
-                        opponent_freedom_grade += 1
+                if (pawn.getCoordinates()[0] == 0 and direction == "W") or (pawn.getCoordinates()[0] == board.getSize() - 1 and direction == "E") or (pawn.getCoordinates()[1] == 0 and direction == "N") or (pawn.getCoordinates()[1] == board.getSize() - 1 and direction == "S"):
+                    opponent_freedom_grade -=1
+                elif board.getFields()[pawn.getCoordinates()].getWall(direction):
+                    opponent_freedom_grade -= 1
+                else:
+                    end_coords = board.getFields()[pawn.getCoordinates()].getNeighborCoords(direction)
+                    if end_coords:
+                        if board.getField(end_coords).getPawn():
+                            opponent_freedom_grade -= PAWN_BARRIER_COEF*1
+                # end_coords = board.getFields()[pawn.getCoordinates()].getNeighborCoords(direction)
+                # if end_coords:
+                #     if findValidPath(pawn.getCoordinates(), end_coords, board.getFields()):
+                #         opponent_freedom_grade += 1
 
         freedom_grade = (current_player_freedom_grade / len(current_pawns)) - (opponent_freedom_grade / len(opponent_pawns))
         
