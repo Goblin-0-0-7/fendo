@@ -11,14 +11,19 @@ from moves import Move, PlaceWall, PlacePawn, MovePawn, MovePawnAndWall
 from events import FendoEvent, WallEvent, FieldEvent, ButtonEvent, OutOfBoundsEvent
 from colors import *
 
-# Settings
+# ---------------------------------------------------------- #
+# ----------------------- Settings ------------------------- #
+# ---------------------------------------------------------- #
+# ----- AI Settings ----- #
 ai = True
 ai_player = 2
 ai_brain = "alpha-beta"
 ai_search_depth = 2
-save_game = False
+# ----- Game Settings ----- #
 pawns = 7
 board_size = 7
+save_game = False
+# ----- Visual Settings ----- #
 screen_width = 900
 margin = (1/9) * screen_width
 board_width = screen_width - 2*margin
@@ -26,7 +31,7 @@ wall_width = (1/150) * board_width
 player_text_size: int = (int) ((1/35) * screen_width)
 button_text_size = (int) ((1/40) * screen_width)
 winner_text_size = (int) ((1/7) * screen_width)
-
+# ---------------------------------------------------------- #
 
 # Usefull parameters
 field_width = board_width / board_size - wall_width
