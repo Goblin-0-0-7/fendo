@@ -133,9 +133,6 @@ if __name__ == "__main__":
     fendoter = Fendoter(ai_player, ai_brain, ai_search_depth)
     print("Performance test:")
     
-    with open("performance_data.csv", "a") as file:
-        file.write(f"{test_func}\n")
-    
     for _ in range(different_boards):
         random_board = Board(7, 7, new=True)
 #        random_board = generateBoard()

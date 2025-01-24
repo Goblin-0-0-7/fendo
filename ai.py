@@ -135,51 +135,16 @@ class Fendoter():
 
     def depth1Eval(self, boards: list[Board], moves: list[Move]) -> Move:
         best_move = boards[0]
-        best_grade = self.gradingI(best_move)
+        best_grade = self.grade(best_move)
         for state in boards:
-            grade = self.gradingI(state)
+            grade = self.grade(state)
             if grade > best_grade:
                 best_move = state
                 best_grade = grade
         best_move_index = boards.index(best_move)
         return moves[best_move_index]
-    
-    def gradingI(self, board: Board) -> int:
-        ''' Takes a board and returns the grade for the current player.'''
-
-        current_player = board.getTurn()
-        current_opponent = board.getCurrentOpponent()
-
-        board.evaluateFields() # TODO: improve evaluation performance
-        if board.getWinner() == board.getTurn():
-            return float('inf')
-
-        # grade area
-        area_grade = board.getPlayerArea(current_player) - board.getPlayerArea(current_opponent)
-
-        # grade movement freedom
-        # freedom_grade = self.calculateMoves(board)[0] # prossessing time too long
-        current_pawns = board.getPawns(current_player)
-        opponent_pawns = board.getPawns(current_opponent)
-        freedom_grade, current_player_freedom_grade, opponent_freedom_grade = 0, 0, 0
-        for direction in ["N", "E", "S", "W"]: # estimate freedom by checking walls/pawns/boarders next to pawns
-            for pawn in current_pawns:
-                end_coords = board.getFields()[pawn.getCoordinates()].getNeighborCoords(direction)
-                if end_coords:
-                    if findValidPath(pawn.getCoordinates(), end_coords, board.getFields()):
-                        current_player_freedom_grade += 1
-            for pawn in opponent_pawns:
-                end_coords = board.getFields()[pawn.getCoordinates()].getNeighborCoords(direction)
-                if end_coords:
-                    if findValidPath(pawn.getCoordinates(), end_coords, board.getFields()):
-                        opponent_freedom_grade += 1
-
-        freedom_grade = (current_player_freedom_grade / len(current_pawns)) - (opponent_freedom_grade / len(opponent_pawns))
         
-        grade = AREA_COEF * area_grade + FREEMOV_COEF * freedom_grade
-        return grade
-        
-    def gradingII(self, board: Board) -> int:
+    def grade(self, board: Board) -> int:
         ''' Takes a board and returns the grade for the current player.'''
 
         current_player = self.player
@@ -189,13 +154,14 @@ class Fendoter():
         if board.getWinner() == board.getTurn():
             return float('inf')
 
+        current_pawns = board.getPawns(current_player)
+        opponent_pawns = board.getPawns(current_opponent)
+
         # grade area
         area_grade = board.getPlayerArea(current_player) - board.getPlayerArea(current_opponent)
 
         # grade movement freedom
         # freedom_grade = self.calculateMoves(board)[0] # prossessing time too long
-        current_pawns = board.getPawns(current_player)
-        opponent_pawns = board.getPawns(current_opponent)
         freedom_grade, current_player_freedom_grade, opponent_freedom_grade = 0, 0, 0
         for direction in ["N", "E", "S", "W"]: # estimate freedom by checking walls/pawns/boarders next to pawns
             for pawn in current_pawns:
@@ -208,6 +174,7 @@ class Fendoter():
                     if end_coords:
                         if board.getField(end_coords).getPawn():
                             current_player_freedom_grade -= PAWN_BARRIER_COEF*1
+                # different approach (but more computing heavy):
                 #end_coords = board.getFields()[pawn.getCoordinates()].getNeighborCoords(direction)
                 #if end_coords:
                 #    if findValidPath(pawn.getCoordinates(), end_coords, board.getFields()):
@@ -222,6 +189,7 @@ class Fendoter():
                     if end_coords:
                         if board.getField(end_coords).getPawn():
                             opponent_freedom_grade -= PAWN_BARRIER_COEF*1
+                # different approach (but more computing heavy):
                 # end_coords = board.getFields()[pawn.getCoordinates()].getNeighborCoords(direction)
                 # if end_coords:
                 #     if findValidPath(pawn.getCoordinates(), end_coords, board.getFields()):
@@ -234,7 +202,7 @@ class Fendoter():
         
     def minimax(self, board: Board, depth: int, maximizing_player: bool) -> tuple[int, list[TreeNode]]:
         if depth == 0:
-            grade = self.gradingI(board)
+            grade = self.grade(board)
             if not maximizing_player:
                 grade = -grade
             return None, grade, TreeNode([], grade, board)
@@ -275,7 +243,7 @@ class Fendoter():
         p: 1 for player, -1 for opponent
         '''
         if depth == 0:
-            grade = p * self.gradingII(board)
+            grade = p * self.grade(board)
             return None, grade, TreeNode([], grade, board)
         
         children = []
@@ -299,7 +267,7 @@ class Fendoter():
         p: 1 for player, -1 for opponent
         '''
         if depth == 0:
-            value = p * self.gradingII(board)
+            value = p * self.grade(board)
             return None, value, TreeNode([], value, board)
         
         children = []
