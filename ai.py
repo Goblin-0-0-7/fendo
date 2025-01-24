@@ -49,16 +49,16 @@ class TreeNode():
 
 class Fendoter():
     
-    def __init__(self, player, grading_method: str, search_depth) -> None:
+    def __init__(self, player, playing_method: str, search_depth) -> None:
         self.ref = Referee()
         self.player = player
         self.opponent = 3 - player #TODO: hardcoded, only works for 2 player
-        self.grading_method = grading_method
+        self.playing_method = playing_method
         self.search_depth = search_depth
         self.search_tree: TreeNode = TreeNode([], 0, None, True)
     
     def makeMove(self, board: Board) -> Move:
-        best_move: Move = self.evaluateMoves(board, self.grading_method)
+        best_move: Move = self.evaluateMoves(board, self.playing_method)
         #self.search_tree.print() # debug
         return best_move
     
@@ -80,7 +80,7 @@ class Fendoter():
                 move, grade , self.search_tree = self.alphabeta(board, depth=self.search_depth, alpha=float('-inf'), beta=float('inf'), p=1)
                 return move
             case _:
-                raise ValueError("Invalid grading method")
+                raise ValueError("Invalid playing method")
     
     
     def calculateMoves(self, board: Board) -> tuple[list[Move], list[Board]]:
