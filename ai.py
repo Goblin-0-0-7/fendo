@@ -148,18 +148,17 @@ class Fendoter():
     def grade(self, board: Board) -> int:
         ''' Takes a board and returns the grade for the current player.'''
 
-        current_player = self.player
-        current_opponent = self.opponent
-
         board.evaluateFields() # TODO: improve evaluation performance
-        if board.getWinner() == board.getTurn():
+        if board.getWinner() == self.player:
             return float('inf')
+        if board.getWinner() == self.opponent:
+            return float('-inf')
 
-        current_pawns = board.getPawns(current_player)
-        opponent_pawns = board.getPawns(current_opponent)
+        current_pawns = board.getPawns(self.player)
+        opponent_pawns = board.getPawns(self.opponent)
 
         # grade area
-        area_grade = board.getPlayerArea(current_player) - board.getPlayerArea(current_opponent)
+        area_grade = board.getPlayerArea(self.player) - board.getPlayerArea(self.opponent)
 
         # grade movement freedom
         # freedom_grade = self.calculateMoves(board)[0] # prossessing time too long
