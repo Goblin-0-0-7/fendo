@@ -246,7 +246,7 @@ class Fendoter():
             return None, grade, TreeNode([], grade, board)
         
         children = []
-        max_eval = -p * float('inf')
+        max_eval = -float('inf')
         next_moves, new_boards = self.calculateMoves(board)
         for new_board in new_boards:
             _, eval, new_child = self.negamax(new_board, depth - 1, -p)
