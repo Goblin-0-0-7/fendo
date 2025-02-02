@@ -65,11 +65,9 @@ class Fendoter():
     def evaluateMoves(self, board: Board, method: str) -> Move:
         match method:
             case "depth1":
-                possible_moves, new_boards = self.calculateMoves(board)
-                return self.depth1Eval(new_boards, possible_moves)
+                return self.depth1Eval(board)
             case "random":
-                possible_moves, new_boards = self.calculateMoves(board)
-                return self.randomGrading(possible_moves)
+                return self.playRandom(board)
             case "minimax":
                 move, grade, self.search_tree = self.minimax(board, depth=self.search_depth, maximizing_player=True)
                 return move
@@ -130,10 +128,12 @@ class Fendoter():
         return moves, new_boards
     
     
-    def randomGrading(self, moves: list[Move]) -> int:
-        return random.choice(moves)
+    def playRandom(self, board: Board) -> int:
+        possible_moves, new_boards = self.calculateMoves(board)
+        return random.choice(possible_moves)
 
-    def depth1Eval(self, boards: list[Board], moves: list[Move]) -> Move:
+    def depth1Eval(self, board: Board) -> Move:
+        moves, boards = self.calculateMoves(board)
         best_move = boards[0]
         best_grade = self.grade(best_move)
         for state in boards:
