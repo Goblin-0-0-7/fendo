@@ -1,4 +1,5 @@
 #include "gamerep.h"
+#include "path.cpp"
 
 
 /*    def checkLegalMove(self, move: Move, board_state: dict) -> bool:

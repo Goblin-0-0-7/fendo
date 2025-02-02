@@ -60,11 +60,11 @@ bool findValidPath(char x, char y, char u, char v, field_t* boardState){
     }
 
     // Check first horizontal then vertical
-    if (checkPathHorizontal(x, u, y, horDrc) && checkPathVertical(y, v, u, verDrc)){
+    if (checkPathHorizontal(startField, endField, horDrc) && checkPathVertical(y, v, u, verDrc)){
         return true;
     }
     // Check first vertical then horizontal
-    if (checkPathVertical(y, v, x, verDrc) && checkPathHorizontal(x, u, v, horDrc)){
+    if (checkPathVertical(y, v, x, verDrc) && checkPathHorizontal(startField, endField, horDrc)){
         return true;
     }
     return false;
