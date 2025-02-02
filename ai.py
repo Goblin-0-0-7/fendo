@@ -127,11 +127,6 @@ class Fendoter():
                         
         return moves, new_boards
     
-    
-    def playRandom(self, board: Board) -> int:
-        possible_moves, new_boards = self.calculateMoves(board)
-        return random.choice(possible_moves)
-
     def depth1Eval(self, board: Board) -> Move:
         moves, boards = self.calculateMoves(board)
         best_move = boards[0]
@@ -144,6 +139,12 @@ class Fendoter():
         best_move_index = boards.index(best_move)
         return moves[best_move_index]
         
+    
+    def playRandom(self, board: Board) -> int:
+        possible_moves, new_boards = self.calculateMoves(board)
+        return random.choice(possible_moves)
+
+    
     def grade(self, board: Board) -> int:
         ''' Takes a board and returns the grade for the current player.'''
 
@@ -203,8 +204,6 @@ class Fendoter():
     def minimax(self, board: Board, depth: int, maximizing_player: bool) -> tuple[int, list[TreeNode]]:
         if depth == 0:
             grade = self.grade(board)
-            if not maximizing_player:
-                grade = -grade
             return None, grade, TreeNode([], grade, board)
         
         children = []
