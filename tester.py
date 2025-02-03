@@ -6,6 +6,7 @@ from board import Board, Field, Pawn
 from ai import Fendoter
 from rules import Referee
 from moves import PlacePawn, MovePawn, MovePawnAndWall, PlaceWall
+from handler import board2Array
 
 
 def generateBoard() -> Board:
@@ -136,14 +137,11 @@ if __name__ == "__main__":
     fendoter = Fendoter(ai_player, ai_brain, ai_search_depth)
     print("Performance test:")
     
-    with open("performance_data.csv", "a") as file:
-        file.write(f"{test_func}\n")
-    
     for _ in range(different_boards):
-        random_board = Board(7, 7, new=True)
-#        random_board = generateBoard()
-#        print(random_board)
-        
+        #random_board = Board(7, 7, new=True)
+        random_board = generateBoard()
+        print(random_board)
+        c_board = board2Array(random_board)
         if timer:
             execution_time = checkPerformance(test_func, random_board, repetitions)
         else:

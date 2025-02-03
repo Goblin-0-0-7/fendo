@@ -10,6 +10,7 @@ from ai import Fendoter
 from moves import Move, PlaceWall, PlacePawn, MovePawn, MovePawnAndWall
 from events import FendoEvent, WallEvent, FieldEvent, ButtonEvent, OutOfBoundsEvent
 from colors import *
+from cpp_representation import *
 
 # ---------------------------------------------------------- #
 # ----------------------- Settings ------------------------- #
@@ -170,10 +171,51 @@ def aiThinking(brain_thread: Thread):
     rect_ai_status.setColor(GRAY)
     visi.update()
 
-def aiMove(board):
+def aiMovePY(board):
     t1 = datetime.datetime.now()
     fendoter_move = fendoter.makeMove(board)
     applyMove(fendoter_move)
+    endTurn()
+    t2 = datetime.datetime.now()
+    delta_t = t2 - t1
+    print(f"AI move computation took: {delta_t.total_seconds()}s")
+
+def board2Array(board: Board):
+    board_array = []
+    for field in board.getFieldsFlat():
+        cField = 0x00
+        if field.getPawn():
+            if field.getPawn().getPlayer() == 1:
+                cField = cField | PLAYER1PAWN
+            else:
+                cField = cField | PLAYER2PAWN
+        else:
+            cField = cField | EMPTYFIELD
+        
+        if field.getWall('N'):
+            cField = cField | WALLNORTH | HASWALL
+        if field.getWall('E'):
+            cField = cField | WALLEAST | HASWALL
+        if field.getWall('S'):
+            cField = cField | WALLSOUTH | HASWALL
+        if field.getWall('W'):
+            cField = cField | WALLWEST | HASWALL
+
+        if field.getOwner():
+            cField = cField | ASSIGNED
+        
+        board_array.append(cField)
+    return board_array
+
+def c2pyMove(c_move) -> Move:
+    ...
+
+def aiMoveC(board: Board):
+    t1 = datetime.datetime.now()
+    board_state = board2Array(board)
+    #c_move = cFendoter.makeMove(boardState)
+    move = c2pyMove(c_move)
+    applyMove(move)
     endTurn()
     t2 = datetime.datetime.now()
     delta_t = t2 - t1
@@ -192,63 +234,65 @@ def applyMove(move: Move): #TODO: move to board.py? ; use in loop
 
 
 # Threads
-ai_brain_thread = Thread(target=aiMove, args=(board,), daemon=True)
+ai_brain_thread = Thread(target=aiMovePY, args=(board,), daemon=True)
 ai_helper_thread = Thread(target=aiThinking, args=(ai_brain_thread,), daemon=True)
 
-# Main Loop
-running = True
-while running:
-    if ai and board.getTurn() == ai_player:
-        if not ai_brain_thread.is_alive():
-            ai_brain_thread = Thread(target=aiMove, args=(board,), daemon=True)
-            ai_brain_thread.start()
-            ai_helper_thread = Thread(target=aiThinking, args=(ai_brain_thread,), daemon=True)
-            ai_helper_thread.start()
-    # Event Loop
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                endTurn()
-            if event.key == pygame.K_r:
-                referee.toggleActive()
-                rect_rules_status.setColor(GREEN if referee.isActive() else RED)
-                update()
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 3: # Right click
-                if not referee.isActive():
+
+if __name__ == "__main__":
+    # Main Loop
+    running = True
+    while running:
+        if ai and board.getTurn() == ai_player:
+            if not ai_brain_thread.is_alive():
+                ai_brain_thread = Thread(target=aiMovePY, args=(board,), daemon=True)
+                ai_brain_thread.start()
+                ai_helper_thread = Thread(target=aiThinking, args=(ai_brain_thread,), daemon=True)
+                ai_helper_thread.start()
+        # Event Loop
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
                     endTurn()
-            if event.button == 1:  # Left click
-                pos = pygame.mouse.get_pos()
-                fendo_event = visi.getEvent(pos)
-                match fendo_event:
-                    case FieldEvent():
-                        field = fendo_event.field
-                        if board.isOccupied(field.coordinates):
-                            board.selectPawn(field.coordinates)
-                        else:
-                            if board.getSelection():
-                                if (referee.checkLegalMove(MovePawn(board.getSelection().coordinates, field.coordinates, board.getTurn()), board.getState())):
-                                    board.movePawn(board.getSelection().coordinates, field.coordinates)
-                                    board.clearSelection()
+                if event.key == pygame.K_r:
+                    referee.toggleActive()
+                    rect_rules_status.setColor(GREEN if referee.isActive() else RED)
+                    update()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 3: # Right click
+                    if not referee.isActive():
+                        endTurn()
+                if event.button == 1:  # Left click
+                    pos = pygame.mouse.get_pos()
+                    fendo_event = visi.getEvent(pos)
+                    match fendo_event:
+                        case FieldEvent():
+                            field = fendo_event.field
+                            if board.isOccupied(field.coordinates):
+                                board.selectPawn(field.coordinates)
                             else:
-                                if referee.checkLegalMove(PlacePawn(field.coordinates, board.getTurn()), board.getState()):                        
-                                    board.placePawn(field.coordinates)
-                                    endTurn()
-                    case WallEvent():
-                        coords = fendo_event.coordinates
-                        direction = fendo_event.direction
-                        if referee.checkLegalMove(PlaceWall(coords, direction, board.getTurn()), board.getState()):
-                            board.placeWall(coords, direction)
-                            endTurn()
-                    case ButtonEvent():
-                        action = fendo_event.button.getAction()
-                        if action is not None:
-                            action()
-                            update()
-                    case OutOfBoundsEvent():
-                        pass
-             
-            visi.update()
-   
+                                if board.getSelection():
+                                    if (referee.checkLegalMove(MovePawn(board.getSelection().coordinates, field.coordinates, board.getTurn()), board.getState())):
+                                        board.movePawn(board.getSelection().coordinates, field.coordinates)
+                                        board.clearSelection()
+                                else:
+                                    if referee.checkLegalMove(PlacePawn(field.coordinates, board.getTurn()), board.getState()):                        
+                                        board.placePawn(field.coordinates)
+                                        endTurn()
+                        case WallEvent():
+                            coords = fendo_event.coordinates
+                            direction = fendo_event.direction
+                            if referee.checkLegalMove(PlaceWall(coords, direction, board.getTurn()), board.getState()):
+                                board.placeWall(coords, direction)
+                                endTurn()
+                        case ButtonEvent():
+                            action = fendo_event.button.getAction()
+                            if action is not None:
+                                action()
+                                update()
+                        case OutOfBoundsEvent():
+                            pass
+                
+                visi.update()
+    
