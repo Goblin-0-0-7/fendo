@@ -14,8 +14,8 @@ bool checkPathHorizontal(char x, char u, char column, unsigned char horDrc, fiel
 }
 
 bool checkPathHorizontal(field_t* startFeld, field_t* endField, unsigned char horDrc){
-    field_t step = horDrc == EAST ? 1 : -1;
-    unsigned char wallDrc = horDrc == EAST ? WALLWEST : WALLEAST;
+    char step = horDrc == EAST ? 1 : -1;
+    unsigned char wallDrc = (horDrc == EAST) ? WALLWEST : WALLEAST;
     field_t* curField = startFeld + step;
 
     while ( curField != endField ){

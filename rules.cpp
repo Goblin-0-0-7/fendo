@@ -1,30 +1,6 @@
 #include "gamerep.h"
 #include "path.cpp"
 
-
-/*    def checkLegalMove(self, move: Move, board_state: dict) -> bool:
-        if not self.active:
-            return True
-        match move:
-            case PlaceWall():
-                return self.checkWallPlace(move.coordinates, move.direction, board_state)
-            case PlacePawn():
-                return self.checkPawnPlace(move.coordinates, move.player, board_state)
-            case MovePawn():
-                return self.checkPawnMove(move.start_coordinates, move.end_coordinates, board_state)
-            case MovePawnAndWall():
-                if self.checkLegalMove(MovePawn(move.start_coordinates, move.end_coordinates, move.player), board_state):
-                    # Manipulate board_state to use checkWallPlace
-                    board_state['moves_list'].append(MovePawn(move.start_coordinates, move.end_coordinates, move.player))
-                    legal = self.checkLegalMove(PlaceWall(move.end_coordinates, move.direction, move.player), board_state)
-                    # Undo the manipulation
-                    board_state['moves_list'].pop()
-                    return legal
-                return False
-            case _:
-                raise ValueError('Invalid move')
- */           
-
 /* Notes: direction is a transferred mask*/
 bool checkWallPlace(char x, char y, unsigned char direction, field_t * boardState){
     field_t* field = boardState + x + 7 * y;
@@ -59,44 +35,44 @@ bool checkPawnMove(char x, char y, char u, char v, field_t* boardState){
     // Check if it is the correct turn
     /* Not needed for AI */
     // Check if the start field has an active pawn (For AI move generation this equals to checking if the start field is already assigned or not)
-    if (*startField | ASSIGNED){
+    if (*startField & ASSIGNED){
         return false;
     }
     // Check if the end field is occupied
-    if (*endField | OCCUPIED){
+    if (*endField & OCCUPIED){
         return false;
     }
     return findValidPath(x, y, u, v, boardState);
 }
 
-/*
-    def checkPawnMove(self, start_coordinates: tuple[int, int], end_coordinates: tuple[int, int], board_state: dict):
-        previous_move = board_state['moves_list'][-1]
-        if previous_move.player == board_state['turn']:
-            return False
-        # Check if the start field has an active pawn
-        if not board_state['fields'][start_coordinates[0], start_coordinates[1]].getPawn().isActive():
-            return False
-        # Check if the end field is occupied
-        if board_state['fields'][end_coordinates[0], end_coordinates[1]].getPawn():
-            return False
-        return findValidPath(start_coordinates, end_coordinates, board_state['fields'])
-    
-    def checkPawnPlace(self, coordinates: tuple[int, int], player: int, board_state: dict):
-        player_pawns: list[Pawn] = board_state['pawns1'] if player == 1 else board_state['pawns2']
-        active_pawns = [pawn for pawn in player_pawns if pawn.isActive()]
-        
-        if board_state['max_pawns'] - len(player_pawns) == 0:
-            return False
-        
-        previous_move = board_state['moves_list'][-1]
-        if isinstance(previous_move, PlacePawn):
-            if previous_move.player == player:
-                return False
-        if isinstance(previous_move, MovePawn):
-            return False
-        for pawn in active_pawns:
-            if findValidPath(pawn.getCoordinates(), coordinates, board_state['fields']):
-                return True
-        return False
-    */
+
+bool checkPawnPlace(char u, char v, char player, field_t* boardState){
+    field_t *placedPawns, *iField;
+    char playerPawns, x , y;
+    // Select correct pawns
+    if (player = 1){
+        placedPawns = boardState + PAWNS1NUM;
+        playerPawns = PLAYER1PAWN;
+    }
+    else {
+        placedPawns = boardState + PAWNS2NUM;
+        playerPawns = PLAYER2PAWN;
+    }
+    // Check if pawns left (hardcoded max pawns)
+    if ((7 - (char)*placedPawns) <= 0){
+        return false;
+    }
+    // Check if PlacePawn is done as only move of the correct turns player
+    /* Not needed for AI */
+    for (int i = 0; i < 49; i++){
+        iField = boardState + i;
+        if( !(*iField & ASSIGNED) && (*iField & playerPawns) ){
+            x = i % 7;
+            y = i / 7;
+            if (findValidPath(x, y, u, v, boardState)){
+                return true;
+            }
+        }
+    }
+    return false;
+}

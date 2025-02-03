@@ -1,10 +1,27 @@
 /* Moves */
+typedef struct move_t{
+    char moveType;
+    char x;
+    char y;
+    char u;
+    char v;
+    char direction;
+    char player;
+}move_t;
+
 #define GAMESTART             0x1
 #define GAMEEND               0xF
 #define PLACEWALL             0x2
 #define PLACEPAWN             0x4
 #define MOVEPAWN              0x8
 #define MOVEPAWNANDWALL       MOVEPAWN | PLACEWALL
+
+/* place of meta data in board state array */
+#define PAWNS1NUM             (sizeof(field_t) * 49)
+#define PAWNS2NUM             (sizeof(field_t) * 50)
+#define ASSIGNEDFIELDS1       (sizeof(field_t) * 51)
+#define ASSIGNEDFIELDS2       (sizeof(field_t) * 52)
+#define TURN                  (sizeof(field_t) * 53)
 
 /*                Fields                                    *\
 |* Fields are represented by a 8-bit value                  *|
@@ -21,7 +38,7 @@
 #define EMPTYFIELD            0x00
 #define PLAYER1PAWN           0x01
 #define PLAYER2PAWN           0x02
-#define OCCUPIED              PLAYER1PAWN | PLAYER2PAWN
+#define OCCUPIED              (PLAYER1PAWN | PLAYER2PAWN)
 #define HASWALL               0x04
 #define WALLNORTH             0x08
 #define WALLSOUTH             0x10
@@ -43,5 +60,11 @@
 #define EAST                  0x4
 #define WEST                  0x8
 
+
+/* Playing Methods */
+#define RANDOM                0x1
+#define MINIMAX               0x2
+#define NEGAMAX               0x3
+#define ALPHABETA             0x4
 
 typedef unsigned char field_t;
