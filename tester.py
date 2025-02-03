@@ -11,7 +11,10 @@ from moves import PlacePawn, MovePawn, MovePawnAndWall, PlaceWall
 def generateBoard() -> Board:
     board_size = 7
     max_pawns = 7
-    board = Board(board_size, max_pawns, new=False)
+    board = Board(board_size, max_pawns, new=True)
+    # remove start pawns
+    board.removePawn((0, 3))
+    board.removePawn((6, 3))
     random_turn = random.randint(1, 2)
     board.setTurn(random_turn)
     
