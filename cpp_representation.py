@@ -1,4 +1,4 @@
-# C++ board state masks
+# C board state masks
 EMPTYFIELD  = 0x00
 PLAYER1PAWN = 0x01
 PLAYER2PAWN = 0x02
@@ -9,3 +9,17 @@ WALLSOUTH   = 0x10
 WALLEAST    = 0x20
 WALLWEST    = 0x40
 ASSIGNED    = 0x80
+
+# C playing methods
+RANDOM = 0x01
+MINIMAX = 0x02
+NEGAMAX = 0x03
+ALPHABETA = 0x04
+
+# C moves
+GAMESTART = b'\x01'
+GAMEEND = b'\x0F'
+PLACEWALL = b'\x02'
+PLACEPAWN = b'\x04'
+MOVEPAWN = b'\x08'
+MOVEPAWNANDWALL = b'\x0A'

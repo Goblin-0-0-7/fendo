@@ -1,3 +1,5 @@
+#ifndef GAMEREP_H
+#define GAMEREP_H
 /* Moves */
 typedef struct move_t{
     char moveType;
@@ -68,3 +70,5 @@ typedef struct move_t{
 #define ALPHABETA             0x4
 
 typedef unsigned char field_t;
+
+#endif

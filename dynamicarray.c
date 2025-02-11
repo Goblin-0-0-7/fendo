@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h> 
 
 #include "gamerep.h"
@@ -15,18 +16,18 @@ typedef struct {
 
 // function prototypes 
 // array container functions 
-void arrayInit(dynamic_array_move_t** arr_ptr); 
-void freeArray(dynamic_array_move_t* container); 
+void arrayInitMove(dynamic_array_move_t** arr_ptr); 
+void freeArrayMove(dynamic_array_move_t* container); 
 
 // Basic Operation functions 
 void addItemMove(dynamic_array_move_t* container, move_t* item); 
 void insertItemMove(dynamic_array_move_t* container, int i, move_t* item); 
 move_t* getItemMove(dynamic_array_move_t* container, int i); 
-void deleteItemMove(dynamic_array_move_t* container, move_t* item);
+void deleteItemMove(dynamic_array_move_t* container, int index);
 
 //------Function Definitions------ 
 // Array initialization 
-void arrayInit(dynamic_array_move_t** arr_ptr) 
+void arrayInitMove(dynamic_array_move_t** arr_ptr) 
 { 
 	dynamic_array_move_t *container; 
 	container = (dynamic_array_move_t*)malloc(sizeof(dynamic_array_move_t)); 
@@ -37,7 +38,7 @@ void arrayInit(dynamic_array_move_t** arr_ptr)
 
 	container->size = 0; 
 	container->capacity = INITIAL_SIZE; 
-	container->array = (move_t *)malloc(INITIAL_SIZE * sizeof(move_t*)); 
+	container->array = (move_t **)malloc(INITIAL_SIZE * sizeof(move_t*)); 
 	if (!container->array){ 
 		printf("Memory Allocation Failed\n"); 
 		exit(0); 
@@ -50,7 +51,7 @@ void arrayInit(dynamic_array_move_t** arr_ptr)
 void addItemMove(dynamic_array_move_t* container, move_t* item) 
 { 
 	if (container->size == container->capacity) { 
-		int *temp = container->array; 
+		move_t** temp = container->array; 
 		container->capacity <<= 1; 
 		container->array = realloc(container->array, container->capacity * sizeof(move_t*)); 
 		if(!container->array) { 
@@ -83,7 +84,7 @@ void insertItemMove(dynamic_array_move_t* container, int index, move_t* item)
 } 
 
 
-void deleteItem(dynamic_array_move_t* container, int index) 
+void deleteItemMove(dynamic_array_move_t* container, int index) 
 { 
 	if(index >= container->size) { 
 		printf("Index Out of Bounds\n"); 
@@ -97,7 +98,7 @@ void deleteItem(dynamic_array_move_t* container, int index)
 } 
 
 
-void freeArray(dynamic_array_move_t* container) 
+void freeArrayMove(dynamic_array_move_t* container) 
 { 
 	free(container->array); 
 	free(container); 
@@ -115,18 +116,18 @@ typedef struct {
 
 // function prototypes 
 // array container functions 
-void arrayInit(dynamic_array_ucharp** arr_ptr); 
-void freeArray(dynamic_array_ucharp* container); 
+void arrayInitUCharP(dynamic_array_ucharp** arr_ptr); 
+void freeArrayUCharP(dynamic_array_ucharp* container); 
 
 // Basic Operation functions 
 void addItemUCharP(dynamic_array_ucharp* container, unsigned char* item); 
 void insertItemUCharP(dynamic_array_ucharp* container, int i, unsigned char* item); 
 unsigned char* getItemUCharP(dynamic_array_ucharp* container, int i); 
-void deleteItemUCharP(dynamic_array_ucharp* container, unsigned char* item);
+void deleteItemUCharP(dynamic_array_ucharp* container, int index);
 
 //------Function Definitions------ 
 // Array initialization 
-void arrayInit(dynamic_array_ucharp** arr_ptr) 
+void arrayInitUCharP(dynamic_array_ucharp** arr_ptr) 
 { 
 	dynamic_array_ucharp *container; 
 	container = (dynamic_array_ucharp*)malloc(sizeof(dynamic_array_ucharp)); 
@@ -137,7 +138,7 @@ void arrayInit(dynamic_array_ucharp** arr_ptr)
 
 	container->size = 0; 
 	container->capacity = INITIAL_SIZE; 
-	container->array = (unsigned char *)malloc(INITIAL_SIZE * sizeof(unsigned char*)); 
+	container->array = (unsigned char** )malloc(INITIAL_SIZE * sizeof(unsigned char*)); 
 	if (!container->array){ 
 		printf("Memory Allocation Failed\n"); 
 		exit(0); 
@@ -150,7 +151,7 @@ void arrayInit(dynamic_array_ucharp** arr_ptr)
 void addItemUCharP(dynamic_array_ucharp* container, unsigned char* item) 
 { 
 	if (container->size == container->capacity) { 
-		int *temp = container->array; 
+		unsigned char** temp = container->array; 
 		container->capacity <<= 1; 
 		container->array = realloc(container->array, container->capacity * sizeof(unsigned char*)); 
 		if(!container->array) { 
@@ -167,7 +168,7 @@ unsigned char* getItemUCharP(dynamic_array_ucharp* container, int index)
 { 
 	if(index >= container->size) { 
 		printf("Index Out of Bounds\n"); 
-		return -1; 
+		return NULL; 
 	} 
 	return container->array[index]; 
 } 
@@ -197,7 +198,7 @@ void deleteItemUCharP(dynamic_array_ucharp* container, int index)
 } 
 
 
-void freeArray(dynamic_array_ucharp* container) 
+void freeArrayUCharP(dynamic_array_ucharp* container) 
 { 
 	free(container->array); 
 	free(container); 
@@ -215,18 +216,18 @@ typedef struct {
 
 // function prototypes 
 // array container functions 
-void arrayInit(dynamic_array_int** arr_ptr); 
-void freeArray(dynamic_array_int* container); 
+void arrayInitInt(dynamic_array_int** arr_ptr); 
+void freeArrayInt(dynamic_array_int* container); 
 
 // Basic Operation functions 
 void addItemInt(dynamic_array_int* container, int item); 
 void insertItemInt(dynamic_array_int* container, int i, int item); 
 int getItemInt(dynamic_array_int* container, int i); 
-void deleteItemInt(dynamic_array_int* container, int item);
+void deleteItemInt(dynamic_array_int* container, int index);
 
 //------Function Definitions------ 
 // Array initialization 
-void arrayInit(dynamic_array_int** arr_ptr) 
+void arrayInitInt(dynamic_array_int** arr_ptr) 
 { 
 	dynamic_array_int *container; 
 	container = (dynamic_array_int*)malloc(sizeof(dynamic_array_int)); 
@@ -297,7 +298,7 @@ void deleteItemInt(dynamic_array_int* container, int index)
 } 
 
  
-void freeArray(dynamic_array_int* container) 
+void freeArrayInt(dynamic_array_int* container) 
 { 
 	free(container->array); 
 	free(container); 

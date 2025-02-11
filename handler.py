@@ -2,6 +2,7 @@ import pygame
 import datetime
 from threading import Thread
 import ctypes
+import os
 
 from board import Board
 from hud import HUD, Button, Text, Rectangle, Axis
@@ -13,6 +14,26 @@ from events import FendoEvent, WallEvent, FieldEvent, ButtonEvent, OutOfBoundsEv
 from colors import *
 from cpp_representation import *
 
+path = os.getcwd()
+ai_lib = ctypes.CDLL(os.path.join(path, "ai.so"))
+
+class fendoterSettings(ctypes.Structure):
+    _fields_ = [("searchDepth", ctypes.c_uint),
+                ("playingMethod", ctypes.c_int)]
+
+class move_t(ctypes.Structure):
+    _fields_ = [("moveType", ctypes.c_char),
+                ("x", ctypes.c_char),
+                ("y", ctypes.c_char),
+                ("u", ctypes.c_char),
+                ("v", ctypes.c_char),
+                ("direction", ctypes.c_char),
+                ("player", ctypes.c_char)]
+
+makeMoveC = ai_lib.makeMove
+makeMoveC.argtypes = [ctypes.c_char * 54, ctypes.POINTER(fendoterSettings)]
+makeMoveC.restype = ctypes.POINTER(move_t)
+
 # ---------------------------------------------------------- #
 # ----------------------- Settings ------------------------- #
 # ---------------------------------------------------------- #
@@ -20,7 +41,10 @@ from cpp_representation import *
 ai = True
 ai_player = 2
 ai_brain = "alpha-beta"
+ai_c_brain = RANDOM
 ai_search_depth = 2
+ai_c_settings = fendoterSettings(ai_search_depth, ai_c_brain)
+ai_version = "C"
 # ----- Game Settings ----- #
 pawns = 7
 board_size = 7
@@ -182,40 +206,51 @@ def aiMovePY(board):
     print(f"AI move computation took: {delta_t.total_seconds()}s")
 
 def board2Array(board: Board):
-    board_array = []
-    for field in board.getFieldsFlat():
+    c_board = (ctypes.c_char * 54)()
+    fields = board.getFieldsFlat()
+    for i in range(len(board.getFieldsFlat())):
         cField = 0x00
-        if field.getPawn():
-            if field.getPawn().getPlayer() == 1:
+        if fields[i].getPawn():
+            if fields[i].getPawn().getPlayer() == 1:
                 cField = cField | PLAYER1PAWN
             else:
                 cField = cField | PLAYER2PAWN
         else:
             cField = cField | EMPTYFIELD
         
-        if field.getWall('N'):
+        if fields[i].getWall('N'):
             cField = cField | WALLNORTH | HASWALL
-        if field.getWall('E'):
+        if fields[i].getWall('E'):
             cField = cField | WALLEAST | HASWALL
-        if field.getWall('S'):
+        if fields[i].getWall('S'):
             cField = cField | WALLSOUTH | HASWALL
-        if field.getWall('W'):
+        if fields[i].getWall('W'):
             cField = cField | WALLWEST | HASWALL
 
-        if field.getOwner():
+        if fields[i].getOwner():
             cField = cField | ASSIGNED
         
-        board_array.append(cField)
-    return board_array
+        c_board[i] = (cField)
+    return c_board
 
-def c2pyMove(c_move) -> Move:
-    ...
+def c2pyMove(c_move_ptr) -> Move:
+    c_move = c_move_ptr.contents
+    if c_move.moveType == PLACEPAWN:
+        return PlacePawn((c_move.u, c_move.v), c_move.player)
+    elif c_move.moveType == PLACEWALL:
+        return PlaceWall((c_move.x, c_move.y), c_move.direction, c_move.player)
+    elif c_move.moveType == MOVEPAWNANDWALL:
+        return MovePawnAndWall((c_move.x, c_move.y), (c_move.u, c_move.v), c_move.direction, c_move.player)
+    else:
+        raise ValueError("AI: Invalid move")
+
+
 
 def aiMoveC(board: Board):
     t1 = datetime.datetime.now()
-    board_state = board2Array(board)
-    #c_move = cFendoter.makeMove(boardState)
-    move = c2pyMove(c_move)
+    c_board = board2Array(board)
+    c_move_ptr = makeMoveC(c_board, ai_c_settings)
+    move = c2pyMove(c_move_ptr)
     applyMove(move)
     endTurn()
     t2 = datetime.datetime.now()
@@ -235,7 +270,13 @@ def applyMove(move: Move): #TODO: move to board.py? ; use in loop
 
 
 # Threads
-ai_brain_thread = Thread(target=aiMovePY, args=(board,), daemon=True)
+if ai_version == "C":
+    aiMove = aiMoveC
+elif ai_version == "PY":
+    aiMove = aiMovePY
+else:
+    raise ValueError("Invalid AI version")
+ai_brain_thread = Thread(target=aiMove, args=(board,), daemon=True)
 ai_helper_thread = Thread(target=aiThinking, args=(ai_brain_thread,), daemon=True)
 
 
@@ -245,7 +286,7 @@ if __name__ == "__main__":
     while running:
         if ai and board.getTurn() == ai_player:
             if not ai_brain_thread.is_alive():
-                ai_brain_thread = Thread(target=aiMovePY, args=(board,), daemon=True)
+                ai_brain_thread = Thread(target=aiMove, args=(board,), daemon=True)
                 ai_brain_thread.start()
                 ai_helper_thread = Thread(target=aiThinking, args=(ai_brain_thread,), daemon=True)
                 ai_helper_thread.start()
