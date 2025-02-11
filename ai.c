@@ -1,9 +1,8 @@
 #include <stdlib.h>
-#include <vector>
 
-#include "ai.h"
+#include "dynamicarray.c"
 #include "gamerep.h"
-#include "rules.cpp"
+#include "rules.c"
 
 /* board operations */
 // Note: the do not check if the move is legal
@@ -73,13 +72,13 @@ void convertBoardState(int* state, field_t* board){
 
 }
 
-void calculateMoves(field_t* board, std::vector<move_t>* moves, std::vector<field_t*>* newBoards){
+void calculateMoves(field_t* board, dynamic_array_move_t* moves, dynamic_array_ucharp* newBoards){
     char turn = (char) *(board + TURN);
     char curPlayer, curOpponent;
     char x, y, u, v;
     char directions[4] = {NORTH, EAST, SOUTH, WEST};
     field_t* iField;
-    field_t newBoard[54];
+    field_t newBoard[54]; //TODO: allocate mem on heap
     move_t move;
 
     if (turn == 1){
@@ -103,7 +102,7 @@ void calculateMoves(field_t* board, std::vector<move_t>* moves, std::vector<fiel
                 if (checkWallPlace(x, y, directions[j], board)){
                     memcpy(newBoard, board, sizeof(field_t) * 54);
                     placeWall(x, y, directions[j], newBoard);
-                    newBoards->push_back(newBoard);
+                    addItemUCharP(newBoards, &newBoard);
                     move.moveType = PLACEWALL;
                     move.direction = directions[j];
                     move.x = x;
@@ -111,7 +110,7 @@ void calculateMoves(field_t* board, std::vector<move_t>* moves, std::vector<fiel
                     move.u = -1;
                     move.v = -1;
                     move.player = turn;
-                    moves->push_back(move);
+                    addItemMove(moves, &move);
                 }
             }
             for (int k = 0; k < 49; k++){
@@ -126,7 +125,7 @@ void calculateMoves(field_t* board, std::vector<move_t>* moves, std::vector<fiel
                     for (int l = 0; l < 4; l++){
                         if (checkWallPlace(u, v, directions[l], newBoard)){
                             placeWall(u, v, directions[l], newBoard);
-                            newBoards->push_back(newBoard);
+                            addItemUCharP(newBoards, &newBoard);
                             move.moveType = MOVEPAWNANDWALL;
                             move.direction = directions[l];
                             move.x = x;
@@ -134,7 +133,7 @@ void calculateMoves(field_t* board, std::vector<move_t>* moves, std::vector<fiel
                             move.u = u;
                             move.v = v;
                             move.player = turn;
-                            moves->push_back(move);
+                            addItemMove(moves, &move);
                         }
                     }
                 }
@@ -146,14 +145,14 @@ void calculateMoves(field_t* board, std::vector<move_t>* moves, std::vector<fiel
             if (checkPawnPlace(u, v, turn, board)){
                 memcpy(newBoard, board, sizeof(field_t) * 54);
                 placePawn(u, v, turn, board);
-                newBoards->push_back(newBoard);
+                addItemUCharP(newBoards, &newBoard);
                 move.moveType = PLACEPAWN;
                 move.x = -1;
                 move.y = -1;
                 move.u = u;
                 move.v = v;
                 move.player = turn;
-                moves->push_back(move);
+                addItemMove(moves, &move);
             }
         }
     }
@@ -206,20 +205,20 @@ def calculateMoves(self, board: Board) -> tuple[list[Move], list[Board]]:
                         
         return moves, new_boards
 */
-Fendoter::Fendoter(){
-}
 
-Fendoter::~Fendoter(){
-}
+typedef struct fendoterSettings{
+    unsigned int search_depth;
+    int playingMethod;
+}fendoterSettings;
 
-int Fendoter::makeMove(int state){
+int makeMove(int state, field_t* boardState, fendoterSettings* settings){
     move_t move;
     convertBoardState(&state, boardState);
-    evaluateMoves(&move);
+    evaluateMoves(&move, boardState, settings);
 }
 
-void Fendoter::evaluateMoves(move_t* bestMove){
-    switch (playingMethod){
+void evaluateMoves(move_t* bestMove, field_t* boardState, fendoterSettings* settings){
+    switch (settings->playingMethod){
         case RANDOM:
             playRandom(bestMove);
             break;
@@ -227,18 +226,18 @@ void Fendoter::evaluateMoves(move_t* bestMove){
             minimax(bestMove);
             break;
         case NEGAMAX:
-            negamax(boardState, search_depth, 1, bestMove);
+            negamax(boardState, settings->search_depth, 1, bestMove, settings);
             break;
         case ALPHABETA:
-            alphabeta(boardState, search_depth, '-inf', 'inf', 1, bestMove);
+            alphabeta(boardState, settings->search_depth, '-inf', 'inf', 1, bestMove);
             break;
     }
 }
 
-int Fendoter::negamax(field_t* board, int depth, int p, move_t* bestMove){
+int negamax(field_t* board, int depth, int p, move_t* bestMove, fendoterSettings* settings){
     int grade, maxEval, eval;
-    std::vector<move_t> moves;
-    std::vector<field_t*> newBoards;
+    dynamic_array_move_t moves;
+    dynamic_array_ucharp newBoards;
 
     if (depth == 0) {
         grade = p * evaluateBoard(board);
@@ -248,12 +247,12 @@ int Fendoter::negamax(field_t* board, int depth, int p, move_t* bestMove){
     maxEval = p * INT_MAX;
     calculateMoves(board, &moves, &newBoards);
 
-    for (size_t i = 0; i < newBoards.size(); i++) {
-        eval = -negamax(newBoards[i], depth - 1, -p, bestMove);
+    for (size_t i = 0; i < newBoards.size; i++) {
+        eval = -negamax(*newBoards.array[i], depth - 1, -p, bestMove, settings);
         if (eval > maxEval) {
             maxEval = eval;
-            if (depth == search_depth){ // override bestMove only in the top most layer
-                *bestMove = moves[i];
+            if (depth == settings->search_depth){ // override bestMove only in the top most layer
+                memcpy(bestMove, moves.array[i], sizeof(move_t));
             }
         }
     }

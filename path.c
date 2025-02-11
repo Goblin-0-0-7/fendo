@@ -1,17 +1,18 @@
 #include "gamerep.h"
+#include <stdbool.h> 
 
-bool checkPathHorizontal(char x, char u, char column, unsigned char horDrc, field_t* boardState){
-    char curX = x;
-    char stepX = horDrc == EAST ? 1 : -1;
-    field_t* curField = boardState + x + 7*column;
-
-    while( curX != u){
-
-        curX += stepX;
-        curField += stepX;
-    }
-    return true;
-}
+//bool checkPathHorizontal(char x, char u, char column, unsigned char horDrc, field_t* boardState){
+//    char curX = x;
+//    char stepX = horDrc == EAST ? 1 : -1;
+//    field_t* curField = boardState + x + 7*column;
+//
+//    while( curX != u){
+//
+//        curX += stepX;
+//        curField += stepX;
+//    }
+//    return true;
+//}
 
 bool checkPathHorizontal(field_t* startFeld, field_t* endField, unsigned char horDrc){
     char step = horDrc == EAST ? 1 : -1;

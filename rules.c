@@ -1,5 +1,5 @@
 #include "gamerep.h"
-#include "path.cpp"
+#include "path.c"
 
 /* Notes: direction is a transferred mask*/
 bool checkWallPlace(char x, char y, unsigned char direction, field_t * boardState){

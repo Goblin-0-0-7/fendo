@@ -1,6 +1,7 @@
 import pygame
 import datetime
 from threading import Thread
+import ctypes
 
 from board import Board
 from hud import HUD, Button, Text, Rectangle, Axis
