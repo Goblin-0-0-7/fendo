@@ -100,6 +100,9 @@ void deleteItemMove(dynamic_array_move_t* container, int index)
 
 void freeArrayMove(dynamic_array_move_t* container) 
 { 
+	for (int i = 0; i < container->size; i++) { 
+		free(container->array[i]); 
+	}
 	free(container->array); 
 	free(container); 
 }
@@ -200,6 +203,9 @@ void deleteItemUCharP(dynamic_array_ucharp* container, int index)
 
 void freeArrayUCharP(dynamic_array_ucharp* container) 
 { 
+	for (int i = 0; i < container->size; i++) { 
+		free(container->array[i]); 
+	}
 	free(container->array); 
 	free(container); 
 }

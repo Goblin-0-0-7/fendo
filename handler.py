@@ -15,7 +15,7 @@ from colors import *
 from cpp_representation import *
 
 path = os.getcwd()
-ai_lib = ctypes.CDLL(os.path.join(path, "ai.so"))
+ai_lib = ctypes.CDLL(os.path.join(path, "ai.dll"))
 
 class fendoterSettings(ctypes.Structure):
     _fields_ = [("searchDepth", ctypes.c_uint),
@@ -33,6 +33,9 @@ class move_t(ctypes.Structure):
 makeMoveC = ai_lib.makeMove
 makeMoveC.argtypes = [ctypes.c_char * 54, ctypes.POINTER(fendoterSettings)]
 makeMoveC.restype = ctypes.POINTER(move_t)
+freeBestMove = ai_lib.freeBestMove
+freeBestMove.argtypes = [ctypes.POINTER(move_t)]
+freeBestMove.restype = None
 
 # ---------------------------------------------------------- #
 # ----------------------- Settings ------------------------- #
@@ -207,8 +210,8 @@ def aiMovePY(board):
 
 def board2Array(board: Board):
     c_board = (ctypes.c_char * 54)()
-    fields = board.getFieldsFlat()
-    for i in range(len(board.getFieldsFlat())):
+    fields = board.getFieldsFlat2()
+    for i in range(len(fields)):
         cField = 0x00
         if fields[i].getPawn():
             if fields[i].getPawn().getPlayer() == 1:
@@ -231,6 +234,11 @@ def board2Array(board: Board):
             cField = cField | ASSIGNED
         
         c_board[i] = (cField)
+    c_board[49] = len(board.getPawns(1))
+    c_board[50] = len(board.getPawns(2))
+    c_board[51] = board.getPlayerArea(1)
+    c_board[52] = board.getPlayerArea(2)
+    c_board[53] = board.getTurn()
     return c_board
 
 def c2pyMove(c_move_ptr) -> Move:
@@ -251,6 +259,7 @@ def aiMoveC(board: Board):
     c_board = board2Array(board)
     c_move_ptr = makeMoveC(c_board, ai_c_settings)
     move = c2pyMove(c_move_ptr)
+    freeBestMove(c_move_ptr)
     applyMove(move)
     endTurn()
     t2 = datetime.datetime.now()

@@ -317,6 +317,14 @@ class Board():
     def getFieldsFlat(self) -> list[Field]:
         return list(self.fields.flatten())
     
+    def getFieldsFlat2(self) -> list[Field]:
+        ''' Returns the fields list in left to right, top to bottom order '''
+        fields = []
+        for j in range(self.size):
+            for i in range(self.size):
+                fields.append(self.fields[i, j])
+        return fields
+    
     def getField(self, coordinates: tuple[int, int]) -> Field:
         return self.fields[coordinates[0], coordinates[1]]
     

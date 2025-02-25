@@ -15,10 +15,10 @@ bool checkWallPlace(char x, char y, unsigned char direction, field_t * boardStat
     if (y == 6 && direction == SOUTH){
         return false;
     }
-    if (x == 6 && direction == EAST){
+    if (x == 0 && direction == EAST){
         return false;
     }
-    if (x == 0 && direction == WEST) {
+    if (x == 6 && direction == WEST) {
         return false;
     }
     // Check if wall placement is next to the previous pawn, moved by the same player
@@ -50,7 +50,7 @@ bool checkPawnPlace(char u, char v, char player, field_t* boardState){
     field_t *placedPawns, *iField;
     char playerPawns, x , y;
     // Select correct pawns
-    if (player = 1){
+    if (player == 1){
         placedPawns = boardState + PAWNS1NUM;
         playerPawns = PLAYER1PAWN;
     }

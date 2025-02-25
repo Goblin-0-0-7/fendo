@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "dynamicarray.c"
 #include "gamerep.h"
@@ -20,22 +21,25 @@ int alphaBeta(field_t* board, int depth, int alpha, int beta, int p, move_t* bes
 /* board operations */
 // Note: the do not check if the move is legal
 void placePawn(char x, char y, char player, field_t* board){
-    char pawn, pawnDataOffset;
+    char pawn, pawnDataOffset, nextTurn;
     field_t* pawnMetaData;
     if (player == 1){
         pawn = PLAYER1PAWN;
         pawnDataOffset = PAWNS1NUM;
+        nextTurn = 2;
     }
     else {
         pawn = PLAYER2PAWN;
         pawnDataOffset = PAWNS2NUM;
+        nextTurn = 1;
     }
     field_t* field = board + x + 7*y;
     *field = *field | pawn;
 
-    // update meta data
+    /* update meta data */
     pawnMetaData = board + pawnDataOffset;
     *pawnMetaData += 1;
+    board[TURN] = nextTurn;
 }
 
 /* Note wallDirection is already the correct mask*/
@@ -61,6 +65,9 @@ void placeWall(char x, char y, char wallDirection, field_t* board){
             *field2 = *field2 | WALLEAST | HASWALL;
             break;
     }
+    
+    /* update meta data */
+    board[TURN] = (board[TURN] == 1) ? 2 : 1;
 }
 
 void movePawn(char x, char y, char u, char v, char player, field_t* board){
@@ -130,9 +137,13 @@ def calculateMoves(self, board: Board) -> tuple[list[Move], list[Board]]:
 //TODO: return should be move_t
 move_t* makeMove(field_t* boardState, fendoterSettings* settings){
     printf("Making move\n");
-    move_t* move;
+    move_t* move = (move_t*) malloc(sizeof(move_t));
     evaluateMoves(move, boardState, settings);
     return move;
+}
+
+void freeBestMove(move_t* bestMove){
+    free(bestMove);
 }
 
 void evaluateMoves(move_t* bestMove, field_t* boardState, fendoterSettings* settings){
@@ -162,9 +173,7 @@ void calculateMoves(field_t* board, dynamic_array_move_t* moves, dynamic_array_u
     char curPlayer, curOpponent;
     char x, y, u, v;
     char directions[4] = {NORTH, EAST, SOUTH, WEST};
-    field_t* iField;
-    field_t newBoard[54]; //TODO: allocate mem on heap
-    move_t move;
+    field_t *iField, *kField;
 
     if (turn == 1){
         curPlayer = PLAYER1PAWN;
@@ -185,40 +194,47 @@ void calculateMoves(field_t* board, dynamic_array_move_t* moves, dynamic_array_u
             y = i / 7;
             for (int j = 0; j < 4; j++){
                 if (checkWallPlace(x, y, directions[j], board)){
+                    field_t* newBoard = (field_t*) malloc(sizeof(field_t) * 54);
+                    move_t* move = (move_t*) malloc(sizeof(move_t));
                     memcpy(newBoard, board, sizeof(field_t) * 54);
                     placeWall(x, y, directions[j], newBoard);
                     addItemUCharP(newBoards, newBoard);
-                    move.moveType = PLACEWALL;
-                    move.direction = directions[j];
-                    move.x = x;
-                    move.y = y;
-                    move.u = -1;
-                    move.v = -1;
-                    move.player = turn;
-                    addItemMove(moves, &move);
+                    move->moveType = PLACEWALL;
+                    move->direction = directions[j];
+                    move->x = x;
+                    move->y = y;
+                    move->u = -1;
+                    move->v = -1;
+                    move->player = turn;
+                    addItemMove(moves, move);
                 }
             }
             for (int k = 0; k < 49; k++){
-                if ( (*iField & ASSIGNED) || (*iField & OCCUPIED) ){
+                kField = board + k;
+                if ( (*kField & ASSIGNED) || (*kField & OCCUPIED) ){
                     continue;
                 }
                 u = k % 7;
                 v = k / 7;
                 if (checkPawnMove(x, y, u, v, board)){
-                    memcpy(newBoard, board, sizeof(field_t) * 54);
-                    movePawn(x, y, u, v, turn, newBoard);
+                    field_t tempBoard[54];
+                    memcpy(tempBoard, board, sizeof(field_t) * 54);
+                    movePawn(x, y, u, v, turn, tempBoard);
                     for (int l = 0; l < 4; l++){
-                        if (checkWallPlace(u, v, directions[l], newBoard)){
+                        if (checkWallPlace(u, v, directions[l], tempBoard)){
+                            field_t* newBoard = (field_t*) malloc(sizeof(field_t) * 54);
+                            move_t* move = (move_t*) malloc(sizeof(move_t));
+                            memcpy(newBoard, tempBoard, sizeof(field_t) * 54);
                             placeWall(u, v, directions[l], newBoard);
                             addItemUCharP(newBoards, newBoard);
-                            move.moveType = MOVEPAWNANDWALL;
-                            move.direction = directions[l];
-                            move.x = x;
-                            move.y = y;
-                            move.u = u;
-                            move.v = v;
-                            move.player = turn;
-                            addItemMove(moves, &move);
+                            move->moveType = MOVEPAWNANDWALL;
+                            move->direction = directions[l];
+                            move->x = x;
+                            move->y = y;
+                            move->u = u;
+                            move->v = v;
+                            move->player = turn;
+                            addItemMove(moves, move);
                         }
                     }
                 }
@@ -228,16 +244,18 @@ void calculateMoves(field_t* board, dynamic_array_move_t* moves, dynamic_array_u
             u = i % 7;
             v = i / 7;
             if (checkPawnPlace(u, v, turn, board)){
+                field_t* newBoard = (field_t*) malloc(sizeof(field_t) * 54);
+                move_t* move = (move_t*) malloc(sizeof(move_t));
                 memcpy(newBoard, board, sizeof(field_t) * 54);
-                placePawn(u, v, turn, board);
+                placePawn(u, v, turn, newBoard);
                 addItemUCharP(newBoards, newBoard);
-                move.moveType = PLACEPAWN;
-                move.x = -1;
-                move.y = -1;
-                move.u = u;
-                move.v = v;
-                move.player = turn;
-                addItemMove(moves, &move);
+                move->moveType = PLACEPAWN;
+                move->x = -1;
+                move->y = -1;
+                move->u = u;
+                move->v = v;
+                move->player = turn;
+                addItemMove(moves, move);
             }
         }
     }
@@ -254,11 +272,18 @@ void playRandom(field_t* board, move_t* bestMove) {
     arrayInitMove(&moves);
     arrayInitUCharP(&newBoards);
 
+    srand(time(NULL)); // Seed the random number generator
     calculateMoves(board, moves, newBoards);
-    printf("Number of moves: %d\n", moves->size);
+    printf("Number of moves: %d\n", moves->size); // todo: size not correct for "standard move" check that calculate moves works as intended
     if (newBoards->size > 0) {
         size_t randomIndex = rand() % newBoards->size;
-        memcpy(bestMove, moves->array[randomIndex], sizeof(move_t));
+        move_t* randomMove = getItemMove(moves, randomIndex);
+        bestMove->moveType = randomMove->moveType;
+        bestMove->x = randomMove->x;
+        bestMove->y = randomMove->y;
+        bestMove->u = randomMove->u;
+        bestMove->v = randomMove->v;
+        bestMove->player = randomMove->player;
         printf("Random move is:\n");
         printf("Move type: %x\n", bestMove->moveType);
         printf("x: %d\n", bestMove->x);
