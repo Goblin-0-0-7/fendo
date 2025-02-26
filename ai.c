@@ -84,57 +84,6 @@ void movePawn(char x, char y, char u, char v, char player, field_t* board){
 }
 
 
-
-/*
-def calculateMoves(self, board: Board) -> tuple[list[Move], list[Board]]:
-        # debug start
-        #print("\nCurrent Board:\n")
-        #print(board)
-        # debug end
-        
-        own_pawns: list[Pawn] = board.getPawns(board.getTurn())
-        fields: list[Field] = board.getFieldsFlat()
-        board_state: dict = board.getState()
-
-        moves = []
-        new_boards = []
-        for pawn in own_pawns:
-            for field in fields:
-                # Place new Pawn
-                if self.ref.checkLegalMove(PlacePawn(field.getCoordinates(), board.getTurn()), board_state):
-                    moves.append(PlacePawn(field.getCoordinates(), board.getTurn()))
-                    new_board = Board(board_state['size'], board_state['max_pawns'], new=False)
-                    #new_board.loadState(copy.deepcopy(board_state))
-                    new_board.loadState(board_state)
-                    new_board.placePawn(field.getCoordinates(), board.getTurn())
-                    new_board.endTurn()
-                    new_boards.append(new_board)
-                for direction in ["N", "E", "S", "W"]:
-                    # Move Pawn and place Wall
-                    if self.ref.checkLegalMove(MovePawnAndWall(pawn.getCoordinates(), field.getCoordinates(), direction, board.getTurn()), board_state):
-                        moves.append(MovePawnAndWall(pawn.getCoordinates(), field.getCoordinates(), direction, board.getTurn()))
-                        new_board = Board(board_state['size'], board_state['max_pawns'], new=False)
-                        #new_board.loadState(copy.deepcopy(board_state))
-                        new_board.loadState(board_state)
-                        new_board.movePawn(pawn.getCoordinates(), field.getCoordinates())
-                        new_board.placeWall(field.getCoordinates(), direction, board.getTurn())
-                        new_board.endTurn()
-                        new_boards.append(new_board)
-                    # Place Wall without moving Pawn
-                    if self.ref.checkLegalMove(PlaceWall(field.getCoordinates(), direction, board.getTurn()), board_state):
-                        moves.append(PlaceWall(field.getCoordinates(), direction, board.getTurn()))
-                        new_board = Board(board_state['size'], board_state['max_pawns'], new=False)
-                        #new_board.loadState(copy.deepcopy(board_state))
-                        new_board.loadState(board_state)
-                        new_board.placeWall(field.getCoordinates(), direction, board.getTurn())
-                        new_board.endTurn()
-                        new_boards.append(new_board)
-                        
-        return moves, new_boards
-*/
-
-
-//TODO: return should be move_t
 move_t* makeMove(field_t* boardState, fendoterSettings* settings){
     printf("Making move\n");
     move_t* move = (move_t*) malloc(sizeof(move_t));
@@ -263,6 +212,114 @@ void calculateMoves(field_t* board, dynamic_array_move_t* moves, dynamic_array_u
 
 
 int evaluateBoard(field_t* board){
+    int grade, areaGrade, freedomGrade;
+    int freedomGradeCurPly, freedomGradeOppPly;
+    field_t iField;
+
+    char wallDirections[4] = {WALLNORTH, WALLSOUTH, WALLEAST, WALLWEST};
+    char currentPlayer, opponentPlayer;
+    char playerAssignedFields, opponentAssignedFields;
+
+    /* Identify current player */
+    char currentTurn = (char) *(board + TURN);
+    if (currentTurn == 1){
+        currentPlayer = PLAYER1PAWN;
+        opponentPlayer = PLAYER2PAWN;
+        playerAssignedFields = (char) *(board + ASSIGNEDFIELDS1);
+        opponentAssignedFields = (char) *(board + ASSIGNEDFIELDS2);
+    }
+    else {
+        currentPlayer = PLAYER2PAWN;
+        opponentPlayer = PLAYER1PAWN;
+        playerAssignedFields = (char) *(board + ASSIGNEDFIELDS2);
+        opponentAssignedFields = (char) *(board + ASSIGNEDFIELDS1);
+    }
+
+    /* Check if current player has won */
+    if (playerAssignedFields >= 25){
+        return INT_MAX;
+    }
+    if (opponentAssignedFields >= 25){
+        return INT_MIN;
+    }
+
+    /* Grade occupied area */
+    areaGrade = playerAssignedFields - opponentAssignedFields;
+
+    /* Grade freedom of the pawns */
+    
+    for (int i = 0; i < 49; i++){
+        iField = *(board + i);
+        if (iField & currentPlayer){
+            for(int d = 0; d < 4; d++){
+                if (iField & wallDirections[d]){
+                    freedomGradeCurPly -= 1;
+                }
+                /*else if (check neighboring fields for enemy and own pawns){
+                    
+                }*/
+                /*else if (check if field is next to boarder) {
+                }*/
+            }
+        }
+        if (iField & opponentPlayer){
+            for(int d = 0; d < 4; d++){
+                if (iField & wallDirections[d]){
+                    freedomGradeOppPly -= 1;
+                }
+                /*else if (check neighboring fields for enemy and own pawns){
+                    
+                }*/
+                /*else if (check if field is next to boarder) {
+                }*/
+            }
+        }
+    }
+
+    grade = areaGrade + freedomGrade; /* add coefficiants */
+    return grade;
+
+/*    # grade movement freedom/
+    /*
+        # grade movement freedom
+        # freedom_grade = self.calculateMoves(board)[0] # prossessing time too long
+        freedom_grade, current_player_freedom_grade, opponent_freedom_grade = 0, 0, 0
+        for direction in ["N", "E", "S", "W"]: # estimate freedom by checking walls/pawns/boarders next to pawns
+            for pawn in current_pawns:
+                if (pawn.getCoordinates()[0] == 0 and direction == "W") or (pawn.getCoordinates()[0] == board.getSize() - 1 and direction == "E") or (pawn.getCoordinates()[1] == 0 and direction == "N") or (pawn.getCoordinates()[1] == board.getSize() - 1 and direction == "S"):
+                    current_player_freedom_grade -=1
+                elif board.getFields()[pawn.getCoordinates()].getWall(direction):
+                    current_player_freedom_grade -= 1
+                else:
+                    end_coords = board.getFields()[pawn.getCoordinates()].getNeighborCoords(direction)
+                    if end_coords:
+                        if board.getField(end_coords).getPawn():
+                            current_player_freedom_grade -= PAWN_BARRIER_COEF*1
+                # different approach (but more computing heavy):
+                #end_coords = board.getFields()[pawn.getCoordinates()].getNeighborCoords(direction)
+                #if end_coords:
+                #    if findValidPath(pawn.getCoordinates(), end_coords, board.getFields()):
+                #        current_player_freedom_grade += 1
+            for pawn in opponent_pawns:
+                if (pawn.getCoordinates()[0] == 0 and direction == "W") or (pawn.getCoordinates()[0] == board.getSize() - 1 and direction == "E") or (pawn.getCoordinates()[1] == 0 and direction == "N") or (pawn.getCoordinates()[1] == board.getSize() - 1 and direction == "S"):
+                    opponent_freedom_grade -=1
+                elif board.getFields()[pawn.getCoordinates()].getWall(direction):
+                    opponent_freedom_grade -= 1
+                else:
+                    end_coords = board.getFields()[pawn.getCoordinates()].getNeighborCoords(direction)
+                    if end_coords:
+                        if board.getField(end_coords).getPawn():
+                            opponent_freedom_grade -= PAWN_BARRIER_COEF*1
+                # different approach (but more computing heavy):
+                # end_coords = board.getFields()[pawn.getCoordinates()].getNeighborCoords(direction)
+                # if end_coords:
+                #     if findValidPath(pawn.getCoordinates(), end_coords, board.getFields()):
+                #         opponent_freedom_grade += 1
+
+        freedom_grade = (current_player_freedom_grade / len(current_pawns)) - (opponent_freedom_grade / len(opponent_pawns))
+        
+        grade = AREA_COEF * area_grade + FREEMOV_COEF * freedom_grade
+        return grade*/
     return 1;
 }
 
@@ -310,7 +367,7 @@ int negamax(field_t* board, int depth, int p, move_t* bestMove, fendoterSettings
         return grade;
     }
 
-    maxEval = p * INT_MAX;
+    maxEval = INT_MIN;
     calculateMoves(board, moves, newBoards);
 
     for (size_t i = 0; i < newBoards->size; i++) {
@@ -319,11 +376,27 @@ int negamax(field_t* board, int depth, int p, move_t* bestMove, fendoterSettings
             maxEval = eval;
             if (depth == settings->searchDepth){ // override bestMove only in the top most layer
                 memcpy(bestMove, moves->array[i], sizeof(move_t));
+                move_t* tempMove = getItemMove(moves, i);
+                bestMove->moveType = tempMove->moveType;
+                bestMove->x = tempMove->x;
+                bestMove->y = tempMove->y;
+                bestMove->u = tempMove->u;
+                bestMove->v = tempMove->v;
+                bestMove->direction = tempMove->direction;
+                bestMove->player = tempMove->player;
+                printf("Best move is:\n");
+                printf("Move type: %x\n", bestMove->moveType);
+                printf("x: %d\n", bestMove->x);
+                printf("y: %d\n", bestMove->y);
+                printf("u: %d\n", bestMove->u);
+                printf("v: %d\n", bestMove->v);
+                printf("direction: %d\n", bestMove->direction);
+                printf("player: %d\n", bestMove->player);
             }
         }
     }
-    //arrayFreeMove(&moves);
-    //arrayFreeUCharP(&newBoards);
+    freeArrayMove(moves);
+    freeArrayUCharP(newBoards);
     return maxEval;
 }
 

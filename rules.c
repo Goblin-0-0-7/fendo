@@ -25,6 +25,8 @@ bool checkWallPlace(char x, char y, char direction, field_t * boardState){
     /* Not needed for AI */
     // Check if field has pawn
     /* Not needed for AI */
+    // Check if wall placement results in two open areas
+    // TODO: Implement
     return true;
 }
 
