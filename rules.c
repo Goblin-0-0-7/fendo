@@ -2,23 +2,23 @@
 #include "path.c"
 
 /* Notes: direction is a transferred mask*/
-bool checkWallPlace(char x, char y, unsigned char direction, field_t * boardState){
+bool checkWallPlace(char x, char y, char direction, field_t * boardState){
     field_t* field = boardState + x + 7 * y;
     // Check if wall is already placed
     if (*field & direction){
         return false;
     }
     // Check if wall is placed on the edge of the board
-    if (y == 0 && direction == NORTH){
+    if (y == 0 && direction == WALLNORTH){
         return false;
     }
-    if (y == 6 && direction == SOUTH){
+    if (y == 6 && direction == WALLSOUTH){
         return false;
     }
-    if (x == 0 && direction == EAST){
+    if (x == 6 && direction == WALLEAST){
         return false;
     }
-    if (x == 6 && direction == WEST) {
+    if (x == 0 && direction == WALLWEST) {
         return false;
     }
     // Check if wall placement is next to the previous pawn, moved by the same player

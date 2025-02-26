@@ -47,7 +47,7 @@ ai_brain = "random"
 ai_c_brain = RANDOM
 ai_search_depth = 2
 ai_c_settings = fendoterSettings(ai_search_depth, ai_c_brain)
-ai_version = "PY" # "C" or "PY"
+ai_version = "C" # "C" or "PY"
 # ----- Game Settings ----- #
 pawns = 7
 board_size = 7
@@ -242,13 +242,13 @@ def board2Array(board: Board):
     return c_board
 
 def c2pyDirection(c_direction) -> str:
-    if c_direction == NORTH:
+    if c_direction == WALLNORTH:
         return 'N'
-    elif c_direction == EAST:
+    elif c_direction == WALLEAST:
         return 'E'
-    elif c_direction == SOUTH:
+    elif c_direction == WALLSOUTH:
         return 'S'
-    elif c_direction == WEST:
+    elif c_direction == WALLWEST:
         return 'W'
     else:
         raise ValueError("Invalid direction")
