@@ -16,7 +16,7 @@ typedef struct move_t{
 #define PLACEWALL             0x2
 #define PLACEPAWN             0x4
 #define MOVEPAWN              0x8
-#define MOVEPAWNANDWALL       MOVEPAWN | PLACEWALL
+#define MOVEPAWNANDWALL       MOVEPAWN | PLACEWALL // 0xA
 
 /* place of meta data in board state array */
 #define PAWNS1NUM             (sizeof(field_t) * 49)

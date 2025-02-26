@@ -283,6 +283,7 @@ void playRandom(field_t* board, move_t* bestMove) {
         bestMove->y = randomMove->y;
         bestMove->u = randomMove->u;
         bestMove->v = randomMove->v;
+        bestMove->direction = randomMove->direction;
         bestMove->player = randomMove->player;
         printf("Random move is:\n");
         printf("Move type: %x\n", bestMove->moveType);

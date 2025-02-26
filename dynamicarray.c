@@ -90,8 +90,8 @@ void deleteItemMove(dynamic_array_move_t* container, int index)
 		printf("Index Out of Bounds\n"); 
 		return; 
 	} 
-
-	for (int i = index; i < container->size; i++) { 
+	free(container->array[index]);
+	for (int i = index; i < (container->size - 1); i++) { 
 		container->array[i] = container->array[i + 1]; 
 	} 
 	container->size--; 
@@ -100,8 +100,8 @@ void deleteItemMove(dynamic_array_move_t* container, int index)
 
 void freeArrayMove(dynamic_array_move_t* container) 
 { 
-	for (int i = 0; i < container->size; i++) { 
-		free(container->array[i]); 
+	while(container->size > 0) {
+		deleteItemMove(container, container->size - 1);
 	}
 	free(container->array); 
 	free(container); 
@@ -194,7 +194,7 @@ void deleteItemUCharP(dynamic_array_ucharp* container, int index)
 		return; 
 	} 
 
-	for (int i = index; i < container->size; i++) { 
+	for (int i = index; i < (container->size - 1); i++) { 
 		container->array[i] = container->array[i + 1]; 
 	} 
 	container->size--; 
@@ -203,8 +203,8 @@ void deleteItemUCharP(dynamic_array_ucharp* container, int index)
 
 void freeArrayUCharP(dynamic_array_ucharp* container) 
 { 
-	for (int i = 0; i < container->size; i++) { 
-		free(container->array[i]); 
+	while(container->size > 0) {
+		deleteItemUCharP(container, container->size - 1);
 	}
 	free(container->array); 
 	free(container); 
@@ -297,7 +297,7 @@ void deleteItemInt(dynamic_array_int* container, int index)
 		return; 
 	} 
 
-	for (int i = index; i < container->size; i++) { 
+	for (int i = index; i < (container->size - 1); i++) { 
 		container->array[i] = container->array[i + 1]; 
 	} 
 	container->size--; 

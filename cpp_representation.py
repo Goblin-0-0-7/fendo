@@ -10,6 +10,12 @@ WALLEAST    = 0x20
 WALLWEST    = 0x40
 ASSIGNED    = 0x80
 
+# C directions
+NORTH = 0x01
+SOUTH = 0x02
+EAST = 0x04
+WEST = 0x08
+
 # C playing methods
 RANDOM = 0x01
 MINIMAX = 0x02

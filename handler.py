@@ -43,11 +43,11 @@ freeBestMove.restype = None
 # ----- AI Settings ----- #
 ai = True
 ai_player = 2
-ai_brain = "alpha-beta"
+ai_brain = "random"
 ai_c_brain = RANDOM
 ai_search_depth = 2
 ai_c_settings = fendoterSettings(ai_search_depth, ai_c_brain)
-ai_version = "C"
+ai_version = "PY" # "C" or "PY"
 # ----- Game Settings ----- #
 pawns = 7
 board_size = 7
@@ -241,17 +241,30 @@ def board2Array(board: Board):
     c_board[53] = board.getTurn()
     return c_board
 
+def c2pyDirection(c_direction) -> str:
+    if c_direction == NORTH:
+        return 'N'
+    elif c_direction == EAST:
+        return 'E'
+    elif c_direction == SOUTH:
+        return 'S'
+    elif c_direction == WEST:
+        return 'W'
+    else:
+        raise ValueError("Invalid direction")
+
 def c2pyMove(c_move_ptr) -> Move:
     c_move = c_move_ptr.contents
     if c_move.moveType == PLACEPAWN:
-        return PlacePawn((c_move.u, c_move.v), c_move.player)
+        return PlacePawn((ord(c_move.u), ord(c_move.v)), ord(c_move.player))
     elif c_move.moveType == PLACEWALL:
-        return PlaceWall((c_move.x, c_move.y), c_move.direction, c_move.player)
+        direction = c2pyDirection(ord(c_move.direction))
+        return PlaceWall((ord(c_move.x), ord(c_move.y)), direction, ord(c_move.player))
     elif c_move.moveType == MOVEPAWNANDWALL:
-        return MovePawnAndWall((c_move.x, c_move.y), (c_move.u, c_move.v), c_move.direction, c_move.player)
+        direction = c2pyDirection(ord(c_move.direction))
+        return MovePawnAndWall((ord(c_move.x), ord(c_move.y)), (ord(c_move.u), ord(c_move.v)), direction, ord(c_move.player))
     else:
         raise ValueError("AI: Invalid move")
-
 
 
 def aiMoveC(board: Board):
