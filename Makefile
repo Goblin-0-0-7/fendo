@@ -1,5 +1,6 @@
 all: ai
 
+#TODO: use -OX optimizations
 ai:
 	gcc -fPIC -shared -o ai.dll ai.c
 

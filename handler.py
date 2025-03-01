@@ -45,7 +45,7 @@ ai = True
 ai_player = 2
 ai_brain = "random"
 ai_c_brain = NEGAMAX
-ai_search_depth = 2
+ai_search_depth = 4
 ai_c_settings = fendoterSettings(ai_search_depth, ai_c_brain)
 ai_version = "C" # "C" or "PY"
 # ----- Game Settings ----- #

@@ -211,9 +211,93 @@ void calculateMoves(field_t* board, dynamic_array_move_t* moves, dynamic_array_u
 }
 
 
+int checkRightField(int i, field_t* field, char player){
+    if (i % 7 == 6){ /* Check for right boarder */
+        return -1;
+    }
+    else if (*field & WALLEAST) { /* Check for wall before occupied */
+        return 3;
+    }
+    else if (*(field + 1) & OCCUPIED) {
+        if (*(field + 1) & player) {
+            return 1;
+        }
+        else { /* If neighboring field not occupied by own player that it must be opponent's player */
+            return 2;
+        }
+    }
+    else {
+        return 0;
+    }
+}
+
+
+int checkLeftField(int i, field_t* field, char player){
+    if (i % 7 == 0){ /* Check for left boarder */
+        return -1;
+    }
+    else if (*field & WALLWEST) { /* Check for wall before occupied */
+        return 3;
+    }
+    else if (*(field - 1) & OCCUPIED) {
+        if (*(field - 1) & player) {
+            return 1;
+        }
+        else { /* If neighboring field not occupied by own player that it must be opponent's player */
+            return 2;
+        }
+    }
+    else {
+        return 0;
+    }
+}
+
+
+int checkTopField(int i, field_t* field, char player){
+    if (i < 7){ /* Check for top boarder */
+        return -1;
+    }
+    else if (*field & WALLNORTH) { /* Check for wall before occupied */
+        return 3;
+    }
+    else if (*(field - 7) & OCCUPIED) {
+        if (*(field - 7) & player) {
+            return 1;
+        }
+        else { /* If neighboring field not occupied by own player that it must be opponent's player */
+            return 2;
+        }
+    }
+    else {
+        return 0;
+    }
+}
+
+
+int checkBottomField(int i, field_t* field, char player){
+    if (i > 41){ /* Check for bottom boarder */
+        return -1;
+    }
+    else if (*field & WALLSOUTH) { /* Check for wall before occupied */
+        return 3;
+    }
+    else if (*(field + 7) & OCCUPIED) {
+        if (*(field + 7) & player) {
+            return 1;
+        }
+        else { /* If neighboring field not occupied by own player that it must be opponent's player */
+            return 2;
+        }
+    }
+    else {
+        return 0;
+    }
+}
+
+
 int evaluateBoard(field_t* board){
-    int grade, areaGrade, freedomGrade;
-    int freedomGradeCurPly, freedomGradeOppPly;
+    int grade = 0, areaGrade = 0, freedomGrade = 0;
+    int freedomGradeCurPly = 0, freedomGradeOppPly = 0;
     field_t iField;
 
     char wallDirections[4] = {WALLNORTH, WALLSOUTH, WALLEAST, WALLWEST};
@@ -251,30 +335,130 @@ int evaluateBoard(field_t* board){
     for (int i = 0; i < 49; i++){
         iField = *(board + i);
         if (iField & currentPlayer){
-            for(int d = 0; d < 4; d++){
-                if (iField & wallDirections[d]){
-                    freedomGradeCurPly -= 1;
-                }
-                /*else if (check neighboring fields for enemy and own pawns){
-                    
-                }*/
-                /*else if (check if field is next to boarder) {
-                }*/
+            switch (checkRightField(i, &iField, currentPlayer)) {
+                case -1: /* Boarder to right */
+                    freedomGradeCurPly -= 10;
+                    break;
+                case 0: /* Empty Field */
+                    //freedomGradeCurPly += 1;
+                    break;
+                case 1: /* Occupied by own pawn */
+                    freedomGradeCurPly -= 3;
+                    break;
+                case 2: /* Occupied by enemy pawn */
+                    freedomGradeCurPly -= 6;
+                    break;
+                case 3: /* Wall */
+                    freedomGradeCurPly -= 10;
+                    break;
+            }
+            switch (checkLeftField(i, &iField, currentPlayer)){
+                case -1: /* Boarder to left */
+                    freedomGradeCurPly -= 10;
+                    break;
+                case 0: /* Empty Field */
+                    //freedomGradeCurPly += 1;
+                    break;
+                case 1: /* Occupied by own pawn */
+                    freedomGradeCurPly -= 3;
+                    break;
+                case 2: /* Occupied by enemy pawn */
+                    freedomGradeCurPly -= 6;
+                    break;
+            }
+            switch (checkTopField(i, &iField, currentPlayer)){
+                case -1: /* Boarder to top */
+                    freedomGradeCurPly -= 10;
+                    break;
+                case 0: /* Empty Field */
+                    //freedomGradeCurPly += 1;
+                    break;
+                case 1: /* Occupied by own pawn */
+                    freedomGradeCurPly -= 3;
+                    break;
+                case 2: /* Occupied by enemy pawn */
+                    freedomGradeCurPly -= 6;
+                    break;
+            }
+            switch (checkBottomField(i, &iField, currentPlayer)){
+                case -1: /* Boarder to bottom */
+                    freedomGradeCurPly -= 10;
+                    break;
+                case 0: /* Empty Field */
+                    //freedomGradeCurPly += 1;
+                    break;
+                case 1: /* Occupied by own pawn */
+                    freedomGradeCurPly -= 3;
+                    break;
+                case 2: /* Occupied by enemy pawn */
+                    freedomGradeCurPly -= 6;
+                    break;
             }
         }
         if (iField & opponentPlayer){
-            for(int d = 0; d < 4; d++){
-                if (iField & wallDirections[d]){
-                    freedomGradeOppPly -= 1;
-                }
-                /*else if (check neighboring fields for enemy and own pawns){
-                    
-                }*/
-                /*else if (check if field is next to boarder) {
-                }*/
+            switch (checkRightField(i, &iField, currentPlayer)) {
+                case -1: /* Boarder to right */
+                    freedomGradeOppPly -= 10;
+                    break;
+                case 0: /* Empty Field */
+                    //freedomGradeOppPly += 1;
+                    break;
+                case 1: /* Occupied by own pawn */
+                    freedomGradeOppPly -= 3;
+                    break;
+                case 2: /* Occupied by enemy pawn */
+                    freedomGradeOppPly -= 6;
+                    break;
+                case 3: /* Wall */
+                	freedomGradeOppPly -= 10;
+                    break;
+            }
+            switch (checkLeftField(i, &iField, currentPlayer)){
+                case -1: /* Boarder to left */
+                    freedomGradeOppPly -= 10;
+                    break;
+                case 0: /* Empty Field */
+                    //freedomGradeOppPly += 1;
+                    break;
+                case 1: /* Occupied by own pawn */
+                    freedomGradeOppPly -= 3;
+                    break;
+                case 2: /* Occupied by enemy pawn */
+                    freedomGradeOppPly -= 6;
+                    break;
+            }
+            switch (checkTopField(i, &iField, currentPlayer)){
+                case -1: /* Boarder to top */
+                    freedomGradeOppPly -= 10;
+                    break;
+                case 0: /* Empty Field */
+                    //freedomGradeOppPly += 1;
+                    break;
+                case 1: /* Occupied by own pawn */
+                    freedomGradeOppPly -= 3;
+                    break;
+                case 2: /* Occupied by enemy pawn */
+                    freedomGradeOppPly -= 6;
+                    break;
+            }
+            switch (checkBottomField(i, &iField, currentPlayer)){
+                case -1: /* Boarder to bottom */
+                    freedomGradeOppPly -= 10;
+                    break;
+                case 0: /* Empty Field */
+                    //freedomGradeOppPly += 1;
+                    break;
+                case 1: /* Occupied by own pawn */
+                    freedomGradeOppPly -= 3;
+                    break;
+                case 2: /* Occupied by enemy pawn */
+                    freedomGradeOppPly -= 6;
+                    break;
             }
         }
     }
+
+    freedomGrade = freedomGradeCurPly - freedomGradeOppPly;
 
     grade = areaGrade + freedomGrade; /* add coefficiants */
     return grade;
@@ -384,7 +568,7 @@ int negamax(field_t* board, int depth, int p, move_t* bestMove, fendoterSettings
                 bestMove->v = tempMove->v;
                 bestMove->direction = tempMove->direction;
                 bestMove->player = tempMove->player;
-                printf("Best move is:\n");
+                printf("Best move with grade %d is:\n", maxEval);
                 printf("Move type: %x\n", bestMove->moveType);
                 printf("x: %d\n", bestMove->x);
                 printf("y: %d\n", bestMove->y);
