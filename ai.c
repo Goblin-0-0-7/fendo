@@ -6,6 +6,8 @@
 #include "gamerep.h"
 #include "rules.c"
 
+size_t depthNodes[4] = {0, 0, 0, 0};
+size_t totalNodes = 0;
 
 typedef struct fendoterSettings{
     unsigned int searchDepth;
@@ -87,6 +89,12 @@ void movePawn(char x, char y, char u, char v, char player, field_t* board){
 move_t* makeMove(field_t* boardState, fendoterSettings* settings){
     printf("Making move\n");
     move_t* move = (move_t*) malloc(sizeof(move_t));
+    for (int i = 0; i < 54; i++){
+        printf("%x ", boardState[i]);
+        if (i % 7 == 6){
+            printf("\n");
+        }
+    }
     evaluateMoves(move, boardState, settings);
     return move;
 }
@@ -100,6 +108,8 @@ void evaluateMoves(move_t* bestMove, field_t* boardState, fendoterSettings* sett
         case RANDOM:
             printf("Using playing method: RANDOM\n");
             playRandom(boardState, bestMove);
+            printf("Total Nodes: %zu\n", totalNodes);
+            printf("Number of nodes at each depth: %zu, %zu, %zu, %zu\n", depthNodes[0], depthNodes[1], depthNodes[2], depthNodes[3]);
             break;
         case MINIMAX:
             printf("Using playing method: MINIMAX\n");
@@ -108,6 +118,7 @@ void evaluateMoves(move_t* bestMove, field_t* boardState, fendoterSettings* sett
         case NEGAMAX:
             printf("Using playing method: NEGAMAX\n");
             negamax(boardState, settings->searchDepth, 1, bestMove, settings);
+            printf("Number of nodes at each depth: %zu, %zu, %zu, %zu\n", depthNodes[0], depthNodes[1], depthNodes[2], depthNodes[3]);
             break;
         case ALPHABETA:
             printf("Using playing method: ALPHABETA\n");
@@ -156,6 +167,7 @@ void calculateMoves(field_t* board, dynamic_array_move_t* moves, dynamic_array_u
                     move->v = -1;
                     move->player = turn;
                     addItemMove(moves, move);
+                    totalNodes++;
                 }
             }
             for (int k = 0; k < 49; k++){
@@ -184,6 +196,7 @@ void calculateMoves(field_t* board, dynamic_array_move_t* moves, dynamic_array_u
                             move->v = v;
                             move->player = turn;
                             addItemMove(moves, move);
+                            totalNodes++;
                         }
                     }
                 }
@@ -205,6 +218,7 @@ void calculateMoves(field_t* board, dynamic_array_move_t* moves, dynamic_array_u
                 move->v = v;
                 move->player = turn;
                 addItemMove(moves, move);
+                totalNodes++;
             }
         }
     }
@@ -462,49 +476,6 @@ int evaluateBoard(field_t* board){
 
     grade = areaGrade + freedomGrade; /* add coefficiants */
     return grade;
-
-/*    # grade movement freedom/
-    /*
-        # grade movement freedom
-        # freedom_grade = self.calculateMoves(board)[0] # prossessing time too long
-        freedom_grade, current_player_freedom_grade, opponent_freedom_grade = 0, 0, 0
-        for direction in ["N", "E", "S", "W"]: # estimate freedom by checking walls/pawns/boarders next to pawns
-            for pawn in current_pawns:
-                if (pawn.getCoordinates()[0] == 0 and direction == "W") or (pawn.getCoordinates()[0] == board.getSize() - 1 and direction == "E") or (pawn.getCoordinates()[1] == 0 and direction == "N") or (pawn.getCoordinates()[1] == board.getSize() - 1 and direction == "S"):
-                    current_player_freedom_grade -=1
-                elif board.getFields()[pawn.getCoordinates()].getWall(direction):
-                    current_player_freedom_grade -= 1
-                else:
-                    end_coords = board.getFields()[pawn.getCoordinates()].getNeighborCoords(direction)
-                    if end_coords:
-                        if board.getField(end_coords).getPawn():
-                            current_player_freedom_grade -= PAWN_BARRIER_COEF*1
-                # different approach (but more computing heavy):
-                #end_coords = board.getFields()[pawn.getCoordinates()].getNeighborCoords(direction)
-                #if end_coords:
-                #    if findValidPath(pawn.getCoordinates(), end_coords, board.getFields()):
-                #        current_player_freedom_grade += 1
-            for pawn in opponent_pawns:
-                if (pawn.getCoordinates()[0] == 0 and direction == "W") or (pawn.getCoordinates()[0] == board.getSize() - 1 and direction == "E") or (pawn.getCoordinates()[1] == 0 and direction == "N") or (pawn.getCoordinates()[1] == board.getSize() - 1 and direction == "S"):
-                    opponent_freedom_grade -=1
-                elif board.getFields()[pawn.getCoordinates()].getWall(direction):
-                    opponent_freedom_grade -= 1
-                else:
-                    end_coords = board.getFields()[pawn.getCoordinates()].getNeighborCoords(direction)
-                    if end_coords:
-                        if board.getField(end_coords).getPawn():
-                            opponent_freedom_grade -= PAWN_BARRIER_COEF*1
-                # different approach (but more computing heavy):
-                # end_coords = board.getFields()[pawn.getCoordinates()].getNeighborCoords(direction)
-                # if end_coords:
-                #     if findValidPath(pawn.getCoordinates(), end_coords, board.getFields()):
-                #         opponent_freedom_grade += 1
-
-        freedom_grade = (current_player_freedom_grade / len(current_pawns)) - (opponent_freedom_grade / len(opponent_pawns))
-        
-        grade = AREA_COEF * area_grade + FREEMOV_COEF * freedom_grade
-        return grade*/
-    return 1;
 }
 
 void playRandom(field_t* board, move_t* bestMove) {
@@ -515,7 +486,33 @@ void playRandom(field_t* board, move_t* bestMove) {
 
     srand(time(NULL)); // Seed the random number generator
     calculateMoves(board, moves, newBoards);
-    printf("Number of moves: %d\n", moves->size); // todo: size not correct for "standard move" check that calculate moves works as intended
+    printf("Number of moves: %zu\n", moves->size); // todo: size not correct for "standard move" check that calculate moves works as intended
+    size_t placePawnMoves = 0;
+    size_t placeWallMoves = 0;
+    size_t movePawnAndWallMoves = 0;
+    size_t undefinedMoves = 0;
+    for (size_t i = 0; i < moves->size; i++) {
+        move_t* tempMove = getItemMove(moves, i);
+        switch (tempMove->moveType) {
+            case PLACEPAWN:
+                placePawnMoves++;
+                break;
+            case PLACEWALL:
+                placeWallMoves++;
+                break;
+            case MOVEPAWNANDWALL:
+                movePawnAndWallMoves++;
+                break;
+            default:
+                undefinedMoves++;
+                break;
+            
+        }
+    }
+    printf("Number of place pawn moves: %zu\n", placePawnMoves);
+    printf("Number of place wall moves: %zu\n", placeWallMoves);
+    printf("Number of move pawn and wall moves: %zu\n", movePawnAndWallMoves);
+    printf("Number of undefined moves: %zu\n", undefinedMoves);
     if (newBoards->size > 0) {
         size_t randomIndex = rand() % newBoards->size;
         move_t* randomMove = getItemMove(moves, randomIndex);
@@ -552,14 +549,14 @@ int negamax(field_t* board, int depth, int p, move_t* bestMove, fendoterSettings
     }
 
     maxEval = INT_MIN;
-    calculateMoves(board, moves, newBoards);
+    calculateMoves(board, moves, newBoards); // each depth produces the factor of around 200 new boards 186-37856-7618193
+    depthNodes[settings->searchDepth - depth] += newBoards->size;
 
     for (size_t i = 0; i < newBoards->size; i++) {
         eval = -negamax(newBoards->array[i], depth - 1, -p, bestMove, settings);
         if (eval > maxEval) {
             maxEval = eval;
             if (depth == settings->searchDepth){ // override bestMove only in the top most layer
-                memcpy(bestMove, moves->array[i], sizeof(move_t));
                 move_t* tempMove = getItemMove(moves, i);
                 bestMove->moveType = tempMove->moveType;
                 bestMove->x = tempMove->x;
