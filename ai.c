@@ -132,7 +132,6 @@ void calculateMoves(field_t* board, dynamic_array_move_t* moves, dynamic_array_u
     char turn = (char) *(board + TURN);
     char curPlayer, curOpponent;
     char x, y, u, v;
-    char wallDirections[4] = {WALLNORTH, WALLSOUTH, WALLEAST, WALLWEST};
     field_t *iField, *kField;
 
     if (turn == 1){
@@ -153,14 +152,14 @@ void calculateMoves(field_t* board, dynamic_array_move_t* moves, dynamic_array_u
             x = i % 7;
             y = i / 7;
             for (int j = 0; j < 4; j++){
-                if (checkWallPlace(x, y, wallDirections[j], board)){
+                if (checkWallPlace(x, y, DIRECTIONS[j], board)){
                     field_t* newBoard = (field_t*) malloc(sizeof(field_t) * 54);
                     move_t* move = (move_t*) malloc(sizeof(move_t));
                     memcpy(newBoard, board, sizeof(field_t) * 54);
-                    placeWall(x, y, wallDirections[j], newBoard);
+                    placeWall(x, y, DIRECTIONS[j], newBoard);
                     addItemUCharP(newBoards, newBoard);
                     move->moveType = PLACEWALL;
-                    move->direction = wallDirections[j];
+                    move->direction = DIRECTIONS[j];
                     move->x = x;
                     move->y = y;
                     move->u = -1;
@@ -182,14 +181,14 @@ void calculateMoves(field_t* board, dynamic_array_move_t* moves, dynamic_array_u
                     memcpy(tempBoard, board, sizeof(field_t) * 54);
                     movePawn(x, y, u, v, turn, tempBoard);
                     for (int l = 0; l < 4; l++){
-                        if (checkWallPlace(u, v, wallDirections[l], tempBoard)){
+                        if (checkWallPlace(u, v, DIRECTIONS[l], tempBoard)){
                             field_t* newBoard = (field_t*) malloc(sizeof(field_t) * 54);
                             move_t* move = (move_t*) malloc(sizeof(move_t));
                             memcpy(newBoard, tempBoard, sizeof(field_t) * 54);
-                            placeWall(u, v, wallDirections[l], newBoard);
+                            placeWall(u, v, DIRECTIONS[l], newBoard);
                             addItemUCharP(newBoards, newBoard);
                             move->moveType = MOVEPAWNANDWALL;
-                            move->direction = wallDirections[l];
+                            move->direction = DIRECTIONS[l];
                             move->x = x;
                             move->y = y;
                             move->u = u;
@@ -314,7 +313,6 @@ int evaluateBoard(field_t* board){
     int freedomGradeCurPly = 0, freedomGradeOppPly = 0;
     field_t iField;
 
-    char wallDirections[4] = {WALLNORTH, WALLSOUTH, WALLEAST, WALLWEST};
     char currentPlayer, opponentPlayer;
     char playerAssignedFields, opponentAssignedFields;
 

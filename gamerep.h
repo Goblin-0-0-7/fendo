@@ -48,7 +48,12 @@ typedef struct move_t{
 #define WALLWEST              0x40
 #define ASSIGNED              0x80
 
-/*                Directions                                *\
+char DIRECTIONS[4] = {WALLNORTH, WALLWEST, WALLSOUTH, WALLEAST}; // Used for iterating over directions
+char DIRECTIONFIELDSTEP[4] = {-7, -1, 7, 1}; // Used to step to next field in the direction
+char DIRECTIONXSTEP[4] = {0, -1, 0, 1}; // Used to iterate x coordinate
+char DIRECTIONYSTEP[4] = {-1, 0, 1, 0}; // Used to iterate y coordinate
+
+/*          Directions for path finding directions           *\
 |* Directions are represented by a 4-bit value               *|
 **  bit | description
 **  ----+----------------
@@ -57,10 +62,10 @@ typedef struct move_t{
 **  3  | east
 **  4  | west
 \*                                                          */
-#define NORTH                 0x1
+#define NORTH                 0x0
+#define WEST                  0x1
 #define SOUTH                 0x2
-#define EAST                  0x4
-#define WEST                  0x8
+#define EAST                  0x3
 
 
 /* Playing Methods */

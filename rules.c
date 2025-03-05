@@ -1,6 +1,57 @@
 #include "gamerep.h"
 #include "path.c"
 
+// Searches while hugging the wall to its right until the goal field is reached
+// TODO: place wall on every boarder field!!
+bool findOpenPath(char cur_x, char cur_y, char origin_x, char origin_y, char u, char v, char dir, field_t* curField){
+    if (cur_x == u && cur_y == v){
+        return true;
+    }
+    if (cur_x == origin_x && cur_y == origin_y){
+        return false;
+    }
+    if (*curField & DIRECTIONS[dir]){
+        return findOpenPath(cur_x, cur_x, origin_x, origin_y, u, v, (dir+1)%4, curField);
+    }
+    else {
+        return findOpenPath(cur_x + DIRECTIONXSTEP[dir], cur_y + DIRECTIONYSTEP[dir], origin_x, origin_y, u, v, (dir+3)%4, curField + DIRECTIONFIELDSTEP[dir]); 
+    }
+}
+
+bool checkOpenArea(char x, char y, char dir, field_t* boardState){
+    char u, v;
+    field_t *field, *opsField;
+    switch (DIRECTIONS[dir]){ // Checking for boarders is not necessary as it is already done in checkWallPlace
+        case WALLNORTH:
+            u = x;
+            v = y - 1;
+            break;
+        case WALLSOUTH:
+            u = x;
+            v = y + 1;
+            break;
+        case WALLEAST:
+            u = x + 1;
+            v = y;
+            break;
+        case WALLWEST:
+            u = x - 1;
+            v = y;
+            break;
+    }
+    field_t* field = boardState + x + 7*y;
+    field_t* opsField = boardState + u + 7*v;
+
+    // Check for open path from origin to opposite field
+    if (findOpenPath(x, y, x, y, u, v, dir, field)){
+        return true;
+    }
+
+    // Check for open area on one and the other side of the wall
+
+    // Occupy area if one is open and the other closed
+}
+
 /* Notes: direction is a transferred mask*/
 bool checkWallPlace(char x, char y, char direction, field_t * boardState){
     field_t* field = boardState + x + 7 * y;
