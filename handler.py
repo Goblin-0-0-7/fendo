@@ -230,6 +230,17 @@ def board2Array(board: Board):
         if fields[i].getWall('W'):
             cField = cField | WALLWEST | HASWALL
 
+        # place walls on the edge of the playing field in c representation
+        x, y = fields[i].getCoordinates()
+        if x == 0:
+            cField = cField | WALLWEST | HASWALL
+        if x == board.getSize() - 1:
+            cField = cField | WALLEAST | HASWALL
+        if y == 0:
+            cField = cField | WALLNORTH | HASWALL
+        if y == board.getSize() - 1:
+            cField = cField | WALLSOUTH | HASWALL
+
         if fields[i].getOwner():
             cField = cField | ASSIGNED
         

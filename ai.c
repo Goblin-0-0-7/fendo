@@ -154,19 +154,25 @@ void calculateMoves(field_t* board, dynamic_array_move_t* moves, dynamic_array_u
             for (int j = 0; j < 4; j++){
                 if (checkWallPlace(x, y, DIRECTIONS[j], board)){
                     field_t* newBoard = (field_t*) malloc(sizeof(field_t) * 54);
-                    move_t* move = (move_t*) malloc(sizeof(move_t));
                     memcpy(newBoard, board, sizeof(field_t) * 54);
                     placeWall(x, y, DIRECTIONS[j], newBoard);
-                    addItemUCharP(newBoards, newBoard);
-                    move->moveType = PLACEWALL;
-                    move->direction = DIRECTIONS[j];
-                    move->x = x;
-                    move->y = y;
-                    move->u = -1;
-                    move->v = -1;
-                    move->player = turn;
-                    addItemMove(moves, move);
-                    totalNodes++;
+                    if (checkOpenArea(x, y, DIRECTIONS[j], newBoard)){
+                        move_t* move = (move_t*) malloc(sizeof(move_t));
+                        addItemUCharP(newBoards, newBoard);
+                        move->moveType = PLACEWALL;
+                        move->direction = DIRECTIONS[j];
+                        move->x = x;
+                        move->y = y;
+                        move->u = -1;
+                        move->v = -1;
+                        move->player = turn;
+                        addItemMove(moves, move);
+                        totalNodes++;
+                        continue;
+                    }
+                    else {
+                        free(newBoard);
+                    }
                 }
             }
             for (int k = 0; k < 49; k++){
@@ -183,19 +189,24 @@ void calculateMoves(field_t* board, dynamic_array_move_t* moves, dynamic_array_u
                     for (int l = 0; l < 4; l++){
                         if (checkWallPlace(u, v, DIRECTIONS[l], tempBoard)){
                             field_t* newBoard = (field_t*) malloc(sizeof(field_t) * 54);
-                            move_t* move = (move_t*) malloc(sizeof(move_t));
                             memcpy(newBoard, tempBoard, sizeof(field_t) * 54);
                             placeWall(u, v, DIRECTIONS[l], newBoard);
-                            addItemUCharP(newBoards, newBoard);
-                            move->moveType = MOVEPAWNANDWALL;
-                            move->direction = DIRECTIONS[l];
-                            move->x = x;
-                            move->y = y;
-                            move->u = u;
-                            move->v = v;
-                            move->player = turn;
-                            addItemMove(moves, move);
-                            totalNodes++;
+                            if (checkOpenArea(u, v, DIRECTIONS[l], newBoard)){
+                                move_t* move = (move_t*) malloc(sizeof(move_t));
+                                addItemUCharP(newBoards, newBoard);
+                                move->moveType = MOVEPAWNANDWALL;
+                                move->direction = DIRECTIONS[l];
+                                move->x = x;
+                                move->y = y;
+                                move->u = u;
+                                move->v = v;
+                                move->player = turn;
+                                addItemMove(moves, move);
+                                totalNodes++;
+                            }
+                            else {
+                                free(newBoard);
+                            }
                         }
                     }
                 }

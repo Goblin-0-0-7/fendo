@@ -1,8 +1,28 @@
 #include "gamerep.h"
 #include "path.c"
 
+
+void assignArea(char x, char y, char player, char incomingDirection, field_t* curField){
+    // Assign current field
+    *curField = *curField | player;
+
+    // breadth first 
+    if (!(*curField & WALLNORTH) && incomingDirection != NORTH){
+        assignArea(x, y - 1, player, SOUTH, curField - 7);
+    }
+    if (!(*curField & WALLWEST) && incomingDirection != WEST){
+        assignArea(x - 1, y, player, EAST, curField - 1);
+    }
+    if (!(*curField & WALLSOUTH) && incomingDirection != SOUTH){
+        assignArea(x, y + 1, player, NORTH, curField + 7);
+    }
+    if (!(*curField & WALLEAST) && incomingDirection != EAST){
+        assignArea(x + 1, y, player, WEST, curField + 1);
+    }
+}
+
 // Searches while hugging the wall to its right until the goal field is reached
-// TODO: place wall on every boarder field!!
+// Uses the fact that in the c representation of the board the edges have boarders
 bool findOpenPath(char cur_x, char cur_y, char origin_x, char origin_y, char u, char v, char dir, field_t* curField){
     if (cur_x == u && cur_y == v){
         return true;
@@ -18,9 +38,47 @@ bool findOpenPath(char cur_x, char cur_y, char origin_x, char origin_y, char u, 
     }
 }
 
+// Uses the fact that in the c representation of the board the edges have boarders
+// Uses breadth first search
+bool checkAreaOccupacion(char x, char y, char incomingDirection, field_t* curField){
+    /* returns:
+    ** 0 if area has no pawns,
+    ** 1 if area is occupied by player 1,
+    ** 2 if area is occupied by player 2,
+    ** 3 if area is open*/
+    char occupation = 0;
+    if (!(*curField & WALLNORTH) && incomingDirection != NORTH){
+        occupation &= checkAreaOccupacion(x, y - 1, SOUTH, curField - 7);
+    }
+    if (!(*curField & WALLWEST) && incomingDirection != WEST){
+        occupation &= checkAreaOccupacion(x - 1, y, EAST, curField - 1);
+    }
+    if (!(*curField & WALLSOUTH) && incomingDirection != SOUTH){
+        occupation &= checkAreaOccupacion(x, y + 1, NORTH, curField + 7);
+    }
+    if (!(*curField & WALLEAST) && incomingDirection != EAST){
+        occupation &= checkAreaOccupacion(x + 1, y, WEST, curField + 1);
+    }
+
+    return *curField & OCCUPIED;
+
+    // if (*curField & OCCUPIED){
+    //     if (*curField & PLAYER1PAWN){
+    //         occupation &= 1;
+    //     }
+    //     else {
+    //         occupation &= 2;
+    //     }
+    // }
+    //return occupation;
+}
+
+
+// changes the board state
 bool checkOpenArea(char x, char y, char dir, field_t* boardState){
-    char u, v;
+    char u, v, area, opsArea;
     field_t *field, *opsField;
+
     switch (DIRECTIONS[dir]){ // Checking for boarders is not necessary as it is already done in checkWallPlace
         case WALLNORTH:
             u = x;
@@ -39,17 +97,32 @@ bool checkOpenArea(char x, char y, char dir, field_t* boardState){
             v = y;
             break;
     }
-    field_t* field = boardState + x + 7*y;
-    field_t* opsField = boardState + u + 7*v;
+
+    field = boardState + x + 7*y;
 
     // Check for open path from origin to opposite field
     if (findOpenPath(x, y, x, y, u, v, dir, field)){
         return true;
     }
 
-    // Check for open area on one and the other side of the wall
+    opsField = boardState + u + 7*v;
 
-    // Occupy area if one is open and the other closed
+    // Check for open area on one and the other side of the wall
+    area = checkAreaOccupacion(x, y, 0xff, field); // 0xff mean no incoming direction
+    opsArea = checkAreaOccupacion(u, v, 0xff, opsField);
+
+    if ( (area == 3 && opsArea == 3) || area == 0 || opsArea == 0){ // Both areas are open or one is empty
+        return false;
+    }
+
+    // alrready assigned fields here as the occupents are kown
+    if (area != 3) {
+        assignArea(x, y, area, 0xff, field); // 0xff mean no incoming direction
+    }
+    if (opsArea != 3) {
+        assignArea(u, v, opsArea, 0xff, opsField);
+    }
+    return true;
 }
 
 /* Notes: direction is a transferred mask*/
@@ -76,8 +149,6 @@ bool checkWallPlace(char x, char y, char direction, field_t * boardState){
     /* Not needed for AI */
     // Check if field has pawn
     /* Not needed for AI */
-    // Check if wall placement results in two open areas
-    // TODO: Implement
     return true;
 }
 
