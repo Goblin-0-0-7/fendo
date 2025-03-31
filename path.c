@@ -80,3 +80,61 @@ bool findValidPath(char x, char y, char u, char v, field_t* boardState){
     }
     return false;
 }
+
+
+char* pathHeuristic(char x, char y, char u,  char v, field_t* field){
+    char* nextDirection = (char*)malloc(4 * sizeof(char));
+
+    if (x > u){
+        nextDirection[0] = WEST;
+        nextDirection[3] = EAST;
+    }
+    else if (x < u){
+        nextDirection[0] = EAST;
+        nextDirection[3] = WEST;
+    }
+    else {
+        nextDirection[0] = 0xff;
+        nextDirection[3] = 0xff;
+    }
+
+    if (y > v){
+        nextDirection[1] = NORTH;
+        nextDirection[2] = SOUTH;
+    }
+    else if (y < v){
+        nextDirection[1] = SOUTH;
+        nextDirection[2] = NORTH;
+    }
+    else {
+        nextDirection[1] = 0xff;
+        nextDirection[2] = 0xff;
+    }
+
+    return nextDirection;
+}
+
+
+// Uses the fact that in the c representation of the board the edges have boarders
+bool findPath(char x, char y, char u, char v, field_t* board){
+    bool result = false;
+    char* nextDirection;
+    if (x == u && y == v){
+        return true;
+    }
+
+    nextDirection = pathHeuristic(x, y, u, v, board);
+    
+    field_t* curField = board + x + 7*y;
+    for (int i = 0; i < 4; i++){
+        if ( (curField && DIRECTIONS[i]) || (nextDirection[i] == 0xff) ){ // check for wall in direction or if direction is invalid
+            continue;
+        }
+        char nextX = x + DIRECTIONXSTEP[i];
+        char nextY = y + DIRECTIONYSTEP[i];
+        result = findPath(nextX, nextY, u, v, board);
+    }
+    free(nextDirection);
+    return result;
+
+}

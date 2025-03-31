@@ -2,24 +2,55 @@
 #include "path.c"
 
 
-void assignArea(char x, char y, char player, char incomingDirection, field_t* curField){
+void assignArea(char x, char y, char player, field_t* curField){
+    // check if already assined
+    if (curField && ASSIGNED){
+        return;
+    }
     // Assign current field
     *curField = *curField | player;
 
-    // breadth first 
-    if (!(*curField & WALLNORTH) && incomingDirection != NORTH){
-        assignArea(x, y - 1, player, SOUTH, curField - 7);
-    }
-    if (!(*curField & WALLWEST) && incomingDirection != WEST){
-        assignArea(x - 1, y, player, EAST, curField - 1);
-    }
-    if (!(*curField & WALLSOUTH) && incomingDirection != SOUTH){
-        assignArea(x, y + 1, player, NORTH, curField + 7);
-    }
-    if (!(*curField & WALLEAST) && incomingDirection != EAST){
-        assignArea(x + 1, y, player, WEST, curField + 1);
+
+    for(char i = 0; i < 4; i++){
+        if (*curField && DIRECTIONS[i]){ // check for wall in direction
+            continue;
+        }
+        char nextX = x + DIRECTIONXSTEP[i];
+        char nextY = y + DIRECTIONYSTEP[i];
+        field_t* nextField = curField + DIRECTIONFIELDSTEP[i];
+        assignArea(nextX, nextY, player, nextField);
     }
 }
+
+
+char checkAreaOccupied(char x, char y, field_t* board){
+    /* returns
+    ** -1 if area is empty
+    ** 0 if area is owned by one player
+    ** 1 if area is occupied/open
+    */
+
+    char areaFlag = -1; // area is empty
+    for (int i = 0; i < 49; i++){
+        field_t* curField = board + i;
+        if (*curField & ASSIGNED){
+            continue;
+        }
+        if (*curField & OCCUPIED){
+            char curX = i % 7;
+            char curY = i / 7;
+            if (curX == x && curY == y){
+                areaFlag = 0; // area is owned
+                continue; // skip own pawn
+            }
+            if (findPath(x, y, curX, curY, board)) { // search from probably enclosed pawn to other pawn to reduce search time
+                return 1; // area is occupied
+            }
+        }
+    }
+    return areaFlag; // no pawns found
+}
+
 
 // Searches while hugging the wall to its right until the goal field is reached
 // Uses the fact that in the c representation of the board the edges have boarders
@@ -38,45 +69,11 @@ bool findOpenPath(char cur_x, char cur_y, char origin_x, char origin_y, char u, 
     }
 }
 
-// Uses the fact that in the c representation of the board the edges have boarders
-// Uses breadth first search
-bool checkAreaOccupacion(char x, char y, char incomingDirection, field_t* curField){
-    /* returns:
-    ** 0 if area has no pawns,
-    ** 1 if area is occupied by player 1,
-    ** 2 if area is occupied by player 2,
-    ** 3 if area is open*/
-    char occupation = 0;
-    if (!(*curField & WALLNORTH) && incomingDirection != NORTH){
-        occupation &= checkAreaOccupacion(x, y - 1, SOUTH, curField - 7);
-    }
-    if (!(*curField & WALLWEST) && incomingDirection != WEST){
-        occupation &= checkAreaOccupacion(x - 1, y, EAST, curField - 1);
-    }
-    if (!(*curField & WALLSOUTH) && incomingDirection != SOUTH){
-        occupation &= checkAreaOccupacion(x, y + 1, NORTH, curField + 7);
-    }
-    if (!(*curField & WALLEAST) && incomingDirection != EAST){
-        occupation &= checkAreaOccupacion(x + 1, y, WEST, curField + 1);
-    }
-
-    return *curField & OCCUPIED;
-
-    // if (*curField & OCCUPIED){
-    //     if (*curField & PLAYER1PAWN){
-    //         occupation &= 1;
-    //     }
-    //     else {
-    //         occupation &= 2;
-    //     }
-    // }
-    //return occupation;
-}
-
 
 // changes the board state
 bool checkOpenArea(char x, char y, char dir, field_t* boardState){
-    char u, v, area, opsArea;
+    char u, v, player;
+    bool area, opsArea;
     field_t *field, *opsField;
 
     switch (DIRECTIONS[dir]){ // Checking for boarders is not necessary as it is already done in checkWallPlace
@@ -108,19 +105,21 @@ bool checkOpenArea(char x, char y, char dir, field_t* boardState){
     opsField = boardState + u + 7*v;
 
     // Check for open area on one and the other side of the wall
-    area = checkAreaOccupacion(x, y, 0xff, field); // 0xff mean no incoming direction
-    opsArea = checkAreaOccupacion(u, v, 0xff, opsField);
+    area = checkAreaOccupied(x, y, boardState);
+    opsArea = checkAreaOccupied(u, v, boardState);
 
-    if ( (area == 3 && opsArea == 3) || area == 0 || opsArea == 0){ // Both areas are open or one is empty
+    if ( (area == -1) || (opsArea == -1) || (area == 1 && opsArea == 1)){ // Both areas are open or one is empty
         return false;
     }
 
-    // alrready assigned fields here as the occupents are kown
-    if (area != 3) {
-        assignArea(x, y, area, 0xff, field); // 0xff mean no incoming direction
+    // already assigned fields here as the occupents are kown
+    if (area == 0) {
+        player = *field & OCCUPIED; // resolves to PLAYER1PAWN or PLAYER2PAWN
+        assignArea(x, y, player, field); // 0xff mean no incoming direction
     }
-    if (opsArea != 3) {
-        assignArea(u, v, opsArea, 0xff, opsField);
+    if (opsArea == 0) {
+        player = *opsField & OCCUPIED; // resolves to PLAYER1PAWN or PLAYER2PAWN
+        assignArea(u, v, player, opsField);
     }
     return true;
 }

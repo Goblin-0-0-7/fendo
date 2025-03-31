@@ -90,7 +90,7 @@ move_t* makeMove(field_t* boardState, fendoterSettings* settings){
     printf("Making move\n");
     move_t* move = (move_t*) malloc(sizeof(move_t));
     for (int i = 0; i < 54; i++){
-        printf("%x ", boardState[i]);
+        printf("%02x ", boardState[i]);
         if (i % 7 == 6){
             printf("\n");
         }
