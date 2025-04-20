@@ -8,7 +8,7 @@ from board import Board
 from hud import HUD, Button, Text, Rectangle, Axis
 from visualizer import Visualizer
 from rules import Referee
-from ai import Fendoter
+from src.ai.ai import Fendoter
 from moves import Move, PlaceWall, PlacePawn, MovePawn, MovePawnAndWall
 from events import FendoEvent, WallEvent, FieldEvent, ButtonEvent, OutOfBoundsEvent
 from colors import *

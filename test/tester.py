@@ -3,10 +3,10 @@ from timeit import timeit
 import cProfile
 
 from board import Board, Field, Pawn
-from ai import Fendoter
+from src.ai.ai import Fendoter
 from rules import Referee
 from moves import PlacePawn, MovePawn, MovePawnAndWall, PlaceWall
-from handler import board2Array
+from src.handler import board2Array
 
 
 def generateBoard() -> Board:
